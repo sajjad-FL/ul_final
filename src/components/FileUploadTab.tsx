@@ -1,125 +1,124 @@
-import { useState } from "react";
+import React, { useState, useRef } from "react";
 
-import { FileUp, X } from "lucide-react";
+import { FileUp } from "lucide-react";
 
-const FileUploadTab = ({setFileUploadData}: {setFileUploadData: any}) => {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+interface FileUploadPanelProps {
+  onFileChange: (file: File | null) => void;
+}
+
+const FileUploadPanel: React.FC<FileUploadPanelProps> = ({ onFileChange }) => {
+  const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDragEnter = (e: React.DragEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile =
+      e.target.files && e.target.files.length > 0 ? e.target.files[0] : null;
+    setFile(selectedFile);
+    onFileChange(selectedFile);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(true);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isDragging) setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDragLeave = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setUploadedFile(e.dataTransfer.files[0]);
-      e.dataTransfer.clearData();
+      const droppedFile = e.dataTransfer.files[0];
+      setFile(droppedFile);
+      onFileChange(droppedFile);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("file", e.target.files);
-    if (e.target.files && e.target.files.length > 0) {
-      setUploadedFile(e.target.files[0]);
-      setFileUploadData(e.target.files[0]);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setUploadedFile(null);
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
   };
 
   return (
-    <div className="mt-6 space-y-6">
-      <div>
-        <p className="text-sm font-medium text-gray-700 mb-1">
+    <div className="p-6">
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium mb-4">
           Upload a regulation source file.
-        </p>
+        </h3>
+        {/* <p className="text-sm text-gray-600 mb-2">Choose a file</p> */}
 
-        <div className="mb-2">
-          <p className="text-sm text-gray-600">Choose a file</p>
-        </div>
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          id="file-upload"
+          type="file"
+          accept=".pdf,.doc,.docx,.txt,.md"
+          onChange={handleFileChange}
+          className="hidden"
+        />
 
+        {/* Drag and drop area */}
         <div
-          className={`border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center bg-gray-50
-            ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
-          onDragEnter={handleDragEnter}
+          className={`border-2 border-dashed rounded-md p-6 cursor-pointer flex flex-col items-center justify-center min-h-[200px] ${
+            isDragging
+              ? "border-primary bg-primary/5"
+              : "border-gray-300 hover:border-gray-400"
+          }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onClick={handleBrowseClick}
         >
-          {!uploadedFile ? (
-            <>
-              <FileUp className="h-10 w-10 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-600 mb-1">
-                Drag and drop file here
-              </p>
-              <p className="text-xs text-gray-500">
-                Limit 200MB per file • PDF, MD
-              </p>
-            </>
-          ) : (
-            <div className="w-full flex items-center justify-between bg-white p-2 border border-gray-200 rounded">
-              <div className="flex items-center">
-                <div className="mr-2">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{uploadedFile.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {Math.round(uploadedFile.size / 1024)} KB
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleRemoveFile}
-                className="text-gray-500 hover:text-gray-700"
+          <FileUp className="h-12 w-12 text-gray-400 mb-4" />
+          <p className="text-center text-sm font-medium">
+            Drag and drop file here
+          </p>
+          <p className="text-center text-sm text-gray-500 mt-1">
+            pdf and md files only{" "}
+            <span
+              className="text-blue-500 cursor-pointer underline text-lg"
+              onClick={(e:any) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleBrowseClick();
+              }}
+            >
+              browse
+            </span>
+          </p>
+        </div>
+
+        {file && (
+          <div className="mt-4 p-3 bg-gray-50 rounded flex justify-between items-center">
+            <span className="text-sm truncate">{file.name}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setFile(null);
+                onFileChange(null);
+              }}
+              className="text-gray-500 hover:text-red-500"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
               >
-                <X size={16} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 text-right">
-          <label className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow cursor-pointer">
-            Browse files
-            <input type="file" className="hidden" onChange={handleFileChange} />
-          </label>
-        </div>
+                <path d="M18 6L6 18M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
-
-  
     </div>
   );
 };
 
-export default FileUploadTab;
+export default FileUploadPanel;

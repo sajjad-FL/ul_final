@@ -1,4 +1,5 @@
 // src/services/userService.ts
+// import camAdvisorData from "@/data";
 import { apiClient } from "./ApiClient";
 
 export const uploadFile = (
@@ -18,7 +19,11 @@ export const uploadFile = (
   });
 };
 
-export const uploadText = (text: string, list_ids: string[], signal?: AbortSignal) => {
+export const uploadText = (
+  text: string,
+  list_ids: string[],
+  signal?: AbortSignal
+) => {
   const formData = new FormData();
   formData.append("input_data", text);
   list_ids.forEach((item) => formData.append("list_data", item));
@@ -31,12 +36,19 @@ export const uploadText = (text: string, list_ids: string[], signal?: AbortSigna
 };
 
 export const getExtractedData = (id: string) => {
-  return apiClient.get<any>(`/process/${id}`);
+  return apiClient.get<any>(`/api/process/${id}`);
+};
+export const getVersions = () => {
+  return apiClient.get<any>(`/api/versions`);
+};
+export const getProcessesByVersion = (version_id: string) => {
+  return apiClient.get<any>(`/api/process/version/${version_id}`);
 };
 
+// downloadService.ts
 export const downloadChemicals = (id: string) => {
-  const API_URL = `/api/download/${id}`;
-  return apiClient.get<any[]>(API_URL, {
+  const API_URL = `/api/download_excel/${id}`;
+  return apiClient.get<ArrayBuffer>(API_URL, {
     responseType: "arraybuffer",
     headers: {
       Accept:

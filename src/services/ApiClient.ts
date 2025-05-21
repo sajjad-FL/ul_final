@@ -7,8 +7,8 @@ export interface ApiResponse<T> {
 }
 
 export const apiClient = {
-  get: async <T>(url: string, params?: object): Promise<ApiResponse<T>> => {
-    const response = await axiosInstance.get<T>(url, { params });
+  get: async <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+    const response = await axiosInstance.get<T>(url, config);
     return { data: response.data, status: response.status };
   },
 
