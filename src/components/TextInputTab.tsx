@@ -2,7 +2,7 @@ import { Textarea } from "@heroui/input";
 
 const TextInputTab = ({ register,  isLoading,name }: any) => {
   return (
-    <div className="p-6 space-y-6">
+    <div className="my-2 mt-7">
       <div>
         <h3 className="text-sm font-medium text-gray-700 mb-2">
           Enter a regulation source text.

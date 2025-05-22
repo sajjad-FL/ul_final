@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 
 import ChemicalResultsSection from "./ChemicalResultsSection";
-import { Tab, Tabs } from "@heroui/tabs";
 
 const MetricsOverviewV1 = (props: {
   listId?: string;
@@ -58,24 +57,14 @@ const MetricsOverviewV1 = (props: {
                 <ChartColumnStacked className="text-blue-500 mr-2" size={18} />
                 <span className="text-sm font-medium">Cas Recall</span>
               </div>
-              <span className="text-4xl font-bold">
+              <span className="text-2xl font-bold">
                 {((metrics?.CAS?.recall || 0) * 100).toFixed(2) || 0}%
               </span>
             </div>
           </div>
         </div>
-
-        <Tabs
-          aria-label="Options"
-          radius="sm"
-          size="md"
-          classNames={{
-            cursor: "rounded-md",
-            tabList: "p-1 w-full",
-            base: "w-[40%] mt-2",
-          }}
-        >
-          <Tab key="rr_ext" title="Cas Extracted Chemicals">
+        <div className="flex justify-between">
+          <div className="w-[49%] mt-2">
             <ChemicalResultsSection
               chemicalCategories={[
                 {
@@ -87,8 +76,8 @@ const MetricsOverviewV1 = (props: {
                 },
               ]}
             />
-          </Tab>
-          <Tab key="rr_actual" title="Cas Actual Chemicals">
+          </div>
+          <div className="w-[49%] mt-2">
             <ChemicalResultsSection
               chemicalCategories={[
                 {
@@ -100,8 +89,8 @@ const MetricsOverviewV1 = (props: {
                 },
               ]}
             />
-          </Tab>
-        </Tabs>
+          </div>
+        </div>
       </div>
 
       <div className="mt-2">
@@ -122,24 +111,19 @@ const MetricsOverviewV1 = (props: {
                 <ChartColumnStacked className="text-blue-500 mr-2" size={18} />
                 <span className="text-sm font-medium">RR Recall</span>
               </div>
-              <span className="text-4xl font-bold">
+              <span className="text-2xl font-bold">
                 {((metricsRR?.CAS?.recall || 0) * 100).toFixed(2) || 0}%
               </span>
             </div>
           </div>
         </div>
 
-        <Tabs
-          aria-label="Options"
-          radius="sm"
-          size="md"
-          classNames={{
-            cursor: "rounded-md",
-            tabList: "p-1 w-full",
-            base: "w-[40%] mt-2",
-          }}
-        >
-          <Tab key="rr_ext" title="RR Extracted Chemicals">
+        <div className="flex justify-between mt-2">
+          {/* RR Extracted Chemicals */}
+          <div className="mb-4 w-[49%] mt-2">
+            <h4 className="text-lg font-semibold mb-2">
+              RR Extracted Chemicals
+            </h4>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
@@ -151,8 +135,11 @@ const MetricsOverviewV1 = (props: {
                 },
               ]}
             />
-          </Tab>
-          <Tab key="rr_actual" title="RR Actual Chemicals">
+          </div>
+
+          {/* RR Actual Chemicals */}
+          <div className="mb-4 w-[49%] mt-2">
+            <h4 className="text-lg font-semibold mb-2">RR Actual Chemicals</h4>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
@@ -164,8 +151,8 @@ const MetricsOverviewV1 = (props: {
                 },
               ]}
             />
-          </Tab>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );

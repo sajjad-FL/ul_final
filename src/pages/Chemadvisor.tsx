@@ -368,7 +368,7 @@ const Chemadvisor = () => {
     <section className="">
       <div className="container mx-auto px-2 py-8 w-full mt-2">
         <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center w-full">
-          CHEMADVISOR
+          chemADVISOR
         </h1>
 
         <Tabs
@@ -410,7 +410,7 @@ const Chemadvisor = () => {
                     </span>
                   )}
 
-                  <div className="px-6 mt-2">
+                  <div className="mt-2">
                     <h3 className="text-sm font-medium text-gray-700 mb-2 ">
                       Enter a list ID.
                     </h3>
@@ -456,7 +456,7 @@ const Chemadvisor = () => {
                   {error}
                 </div>
               ) : extractionData && Object.keys(extractionData)?.length ? (
-                <div className="space-y-6 mt-4 px-6">
+                <div className="space-y-6 mt-4">
                   <div className="flex justify-between items-center mt-2">
                     <h2 className="text-2xl font-bold text-gray-800">
                       Extracted Chemicals
@@ -541,7 +541,7 @@ const Chemadvisor = () => {
                       </span>
                     )}
                   </div>
-                  <div className="px-6 mt-2">
+                  <div className="mt-2">
                     <h3 className="text-sm font-medium text-gray-700 mb-2 ">
                       Enter a list ID.
                     </h3>
@@ -640,7 +640,7 @@ const Chemadvisor = () => {
             </div>
           </Tab>
           <Tab key="metrics" title="Metrics">
-            <div className="px-6 mt-4 space-y-6">
+            <div className="">
               <Select
                 className="mb-2"
                 label="Select  Version"

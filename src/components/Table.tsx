@@ -43,11 +43,12 @@ const TableFooter = React.forwardRef<
     ref={ref}
     className={clsx(
       "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
-      className
+      className,
     )}
     {...props}
   />
 ));
+
 TableFooter.displayName = "TableFooter";
 
 const TableRow = React.forwardRef<
@@ -58,7 +59,7 @@ const TableRow = React.forwardRef<
     ref={ref}
     className={clsx(
       "border-b border-gray-300 [&>td]:border-r [&>th]:border-r last:[&>td]:border-r-0 last:[&>th]:border-r-0 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
-      className
+      className,
     )}
     {...props}
   />
@@ -74,11 +75,12 @@ const TableHead = React.forwardRef<
     ref={ref}
     className={clsx(
       "h-12 px-4 text-left align-middle font-medium  [&:has([role=checkbox])]:pr-0",
-      className
+      className,
     )}
     {...props}
   />
 ));
+
 TableHead.displayName = "TableHead";
 
 const TableCell = React.forwardRef<
@@ -89,23 +91,21 @@ const TableCell = React.forwardRef<
     ref={ref}
     className={clsx(
       "p-2 align-middle [&:has([role=checkbox])]:pr-0 text-gray-500 font-sm font-semibold",
-      className
+      className,
     )}
     {...props}
   />
 ));
+
 TableCell.displayName = "TableCell";
 
 const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
-  <caption
-    ref={ref}
-    className={clsx("mt-4 text-sm ", className)}
-    {...props}
-  />
+  <caption ref={ref} className={clsx("mt-4 text-sm ", className)} {...props} />
 ));
+
 TableCaption.displayName = "TableCaption";
 
 export {

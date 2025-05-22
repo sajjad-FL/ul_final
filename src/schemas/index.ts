@@ -8,13 +8,13 @@ export const textSchema = Yup.object().shape({
       "regulation text cannot be just whitespace",
       (value: any) => value && value.trim().length > 0
     ),
- list_data: Yup.array()
-    .of(Yup.string().required("List ID is required"))
-    .min(1, "atleast one list id is required"),
+//  list_data: Yup.array()
+//     .of(Yup.string().required("List ID is required"))
+//     .min(1, "atleast one list id is required"),
 });
 export const fileSchema = Yup.object().shape({
   file: Yup.mixed().required("File is required"),
-  list_data: Yup.array()
-    .of(Yup.string().required("List ID is required"))
-    .min(1, "atleast one list id is required"),
+  // list_data: Yup.array()
+  //   .of(Yup.string().required("List ID is required"))
+  //   .min(1, "atleast one list id is required"),
 });

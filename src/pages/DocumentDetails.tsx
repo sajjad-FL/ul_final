@@ -1,17 +1,18 @@
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useParams } from "react-router-dom";
+
 import MetricsOverviewV1 from "@/components/Metrics_v1";
 import { SkeletonLoading } from "@/components/SkeletonLoading";
 import { getExtractedData } from "@/services/APIServices";
 // import { ChevronLeft } from "lucide-react";
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import {  useParams } from "react-router-dom";
 
 const DocumentDetails = () => {
   const [extractionData, setExtractionData] = useState<any>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { documentId } = useParams();
 
-//   const navigate = useNavigate();
+  //   const navigate = useNavigate();
 
   const getDataById = async (id: string) => {
     setIsLoading(true);
@@ -21,6 +22,7 @@ const DocumentDetails = () => {
           if (res.status === 200) {
             const data = res?.data || {};
             const extractionData = data || {};
+
             extractionData._id = extractionData.id;
             extractionData.filename =
               extractionData.file_path.split("/").pop() || "";
@@ -44,12 +46,10 @@ const DocumentDetails = () => {
   }, [documentId]);
 
   return (
-    <div className="container mx-auto px-2 py-8 w-full mt-2">
-      <div className="px-6 mb-2 flex items-center">
+    <div className="container mx-auto py-8 w-full mt-2">
+      <div className="mb-2 flex items-center">
         {/* <ChevronLeft className="w-8 h-8 mr-2 cursor-pointer" onClick={() => navigate(-1)} /> */}
-        <p className="text-left  font-bold text-2xl">
-          Extracted Chemicals
-        </p>
+        <p className="text-left  font-bold text-2xl">Extracted Chemicals</p>
       </div>
       {isLoading ? (
         <SkeletonLoading />
@@ -58,7 +58,7 @@ const DocumentDetails = () => {
           {isLoading ? (
             <SkeletonLoading />
           ) : extractionData && Object.keys(extractionData)?.length ? (
-            <div className="space-y-6 mt-4 px-6">
+            <div className="space-y-6 mt-4">
               <div className="flex justify-between items-center mt-2">
                 <h2 className="text-xl font-medium text-gray-800">
                   File Name - {extractionData.filename}
@@ -97,12 +97,12 @@ const DocumentDetails = () => {
                     <MetricsOverviewV1
                       key={listId}
                       actualChemicals={actual_chemicals || []}
+                      actualChemicalsRR={actual_chemicals_rr || []}
                       extractedChemicals={extracted_chemicals || []}
+                      extractedChemicalsRR={extracted_chemicals_rr || []}
                       listId={listId}
                       metrics={metrics}
                       metricsRR={metricsRR}
-                      actualChemicalsRR={actual_chemicals_rr || []}
-                      extractedChemicalsRR={extracted_chemicals_rr || []}
                     />
                   );
                 })}

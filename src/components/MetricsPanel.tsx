@@ -147,7 +147,7 @@ const MetricsPanel = ({ proccessData }: any) => {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 mt-5">
       <div>
         <h2 className="text-xl font-bold mb-4">Overall Evaluation Metrics</h2>
       </div>

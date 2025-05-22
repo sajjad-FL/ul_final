@@ -1,6 +1,8 @@
 // src/services/userService.ts
 // import camAdvisorData from "@/data";
+import camAdvisorData from '@/data';
 import { apiClient } from "./ApiClient";
+import axios from "axios";
 
 export const uploadFile = (
   file: File,
@@ -24,6 +26,7 @@ export const uploadText = (
   list_ids: string[],
   signal?: AbortSignal
 ) => {
+  // return { status: 200, data: camAdvisorData };
   const formData = new FormData();
   formData.append("input_data", text);
   list_ids.forEach((item) => formData.append("list_data", item));
@@ -41,8 +44,11 @@ export const getExtractedData = (id: string) => {
 export const getVersions = () => {
   return apiClient.get<any>(`/api/versions`);
 };
-export const getProcessesByVersion = (version_id: string) => {
-  return apiClient.get<any>(`/api/process/version/${version_id}`);
+export const getProcessesByVersion = async (version_id: string) => {
+  // return apiClient.get<any>(`/api/process/version/${version_id}`);
+  const {data} = await axios.get("/ChemADVISOR.process_data.json");
+  return data;
+  // return { status: 200 }
 };
 
 // downloadService.ts
