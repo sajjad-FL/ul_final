@@ -1,7 +1,5 @@
 import React, { useState, useRef } from "react";
-
 import { FileUp } from "lucide-react";
-
 
 interface FileUploadPanelProps {
   onFileChange: (file: File | null) => void;
@@ -15,6 +13,7 @@ const FileUploadPanel: React.FC<FileUploadPanelProps> = ({ onFileChange }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile =
       e.target.files && e.target.files.length > 0 ? e.target.files[0] : null;
+
     setFile(selectedFile);
     onFileChange(selectedFile);
   };
@@ -34,6 +33,7 @@ const FileUploadPanel: React.FC<FileUploadPanelProps> = ({ onFileChange }) => {
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFile = e.dataTransfer.files[0];
+
       setFile(droppedFile);
       onFileChange(droppedFile);
     }
@@ -44,21 +44,21 @@ const FileUploadPanel: React.FC<FileUploadPanelProps> = ({ onFileChange }) => {
   };
 
   return (
-    <div className="p-6">
+    <div className="">
       <div className="space-y-4">
-        <h3 className="text-sm font-medium mb-4">
+        {/* <h3 className="text-sm font-medium mb-4">
           Upload a regulation source file.
-        </h3>
+        </h3> */}
         {/* <p className="text-sm text-gray-600 mb-2">Choose a file</p> */}
 
         {/* Hidden file input */}
         <input
           ref={fileInputRef}
+          accept=".pdf,.doc,.docx,.md,.html,.pdf,.docx"
+          className="hidden"
           id="file-upload"
           type="file"
-          accept=".pdf,.doc,.docx,.txt,.md"
           onChange={handleFileChange}
-          className="hidden"
         />
 
         {/* Drag and drop area */}
@@ -68,27 +68,27 @@ const FileUploadPanel: React.FC<FileUploadPanelProps> = ({ onFileChange }) => {
               ? "border-primary bg-primary/5"
               : "border-gray-300 hover:border-gray-400"
           }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
           onClick={handleBrowseClick}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
         >
-          <FileUp className="h-12 w-12 text-gray-400 mb-4" />
+          <FileUp className="h-6 w-6  mb-4 text-blue-500" />
           <p className="text-center text-sm font-medium">
-            Drag and drop file here
-          </p>
-          <p className="text-center text-sm text-gray-500 mt-1">
-            pdf and md files only{" "}
             <span
               className="text-blue-500 cursor-pointer underline text-lg"
-              onClick={(e:any) => {
+              onClick={(e: any) => {
                 e.stopPropagation();
                 e.preventDefault();
                 handleBrowseClick();
               }}
             >
-              browse
-            </span>
+              File
+            </span>{" "}
+            or drag and drop
+          </p>
+          <p className="text-center text-sm text-gray-500 mt-1">
+            PDF, DOC, HTML or .XLSX (max. 3MB)
           </p>
         </div>
 
@@ -96,22 +96,22 @@ const FileUploadPanel: React.FC<FileUploadPanelProps> = ({ onFileChange }) => {
           <div className="mt-4 p-3 bg-gray-50 rounded flex justify-between items-center">
             <span className="text-sm truncate">{file.name}</span>
             <button
+              className="text-gray-500 hover:text-red-500"
               onClick={(e) => {
                 e.stopPropagation();
                 setFile(null);
                 onFileChange(null);
               }}
-              className="text-gray-500 hover:text-red-500"
             >
               <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
                 fill="none"
+                height="16"
                 stroke="currentColor"
                 strokeWidth="2"
+                viewBox="0 0 24 24"
+                width="16"
               >
-                <path d="M18 6L6 18M6 6l12 12"></path>
+                <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
           </div>

@@ -1,3 +1,5 @@
+import metricsData from '@/data/metricsData';
+import ChemicalTable from "./ChemicalTable";
 import {
   Table,
   TableBody,
@@ -8,216 +10,128 @@ import {
 } from "./Table";
 
 // Interface for CAS metrics data
-interface CasMetric {
-  file_name: string;
-  list_id: string;
-  precision: string;
-  recall: string;
-  extracted_chemicals: number;
-  actual_chemicals: number;
-  matched: number;
-  extra: number;
-  missing: number;
-}
 
 const MetricsPanel = ({ proccessData }: any) => {
-  // Sample data for the CAS metrics
-  const casMetrics: CasMetric[] = [
+  console.log("MetricsPanel proccessData:", {proccessData})
+  const processData = metricsData;
+  const { overall_metrics = {}, with_list = [] } = processData || {}
+    console.log({ processData, overall_metrics });
+    const metricsColumns: any[] = [
     {
-      file_name: "EU - Military Common List - Source.pdf.md",
-      list_id: "6611",
-      precision: "100.0%",
-      recall: "99.0%",
-      extracted_chemicals: 132,
-      actual_chemicals: 134,
-      matched: 132,
-      extra: 0,
-      missing: 2,
+      key: "filename",
+      label: "File Name",
+      className: "text-[--ul-text-primary]",
+    },
+    // {
+    //   key: "list_length",
+    //   label: "List Length",
+    //   className: "text-[--ul-text-primary]",
+    // },
+    {
+      key: "list_id",
+      label: "List ID",
+      className: "text-[--ul-text-primary]",
     },
     {
-      file_name: "EU - Military Common List - Source.pdf.md",
-      list_id: "6612",
-      precision: "100.0%",
-      recall: "97.0%",
-      extracted_chemicals: 33,
-      actual_chemicals: 34,
-      matched: 33,
-      extra: 0,
-      missing: 1,
+      key: "precision",
+      label: "Precision",
+      className: "text-[--ul-text-primary]",
     },
     {
-      file_name:
-        "U.S. - DEA (Drug Enforcement Administration) - Controlled Substances - Source.pdf.md",
-      list_id: "811",
-      precision: "100.0%",
-      recall: "100.0%",
-      extracted_chemicals: 15,
-      actual_chemicals: 15,
-      matched: 15,
-      extra: 0,
-      missing: 0,
+      key: "recall",
+      label: "Recall",
+      className: "text-[--ul-text-primary]",
     },
     {
-      file_name:
-        "U.S. - DEA (Drug Enforcement Administration) - Controlled Substances - Source.pdf.md",
-      list_id: "817",
-      precision: "99.0%",
-      recall: "97.0%",
-      extracted_chemicals: 268,
-      actual_chemicals: 272,
-      matched: 265,
-      extra: 3,
-      missing: 7,
+      key: "extracted_chemicals",
+      label: "Extracted Chemicals",
+      className: "text-[--ul-text-primary]",
     },
     {
-      file_name: "Odor Thresholds 3rd edition.pdf.md",
-      list_id: "470",
-      precision: "100.0%",
-      recall: "100.0%",
-      extracted_chemicals: 1095,
-      actual_chemicals: 736,
-      matched: 368,
-      extra: 0,
-      missing: 0,
+      key: "actual_chemicals",
+      label: "Actual Chemicals",
+      className: "text-[--ul-text-primary]",
     },
     {
-      file_name: "Canada - CEPA - Source.pdf.md",
-      list_id: "523",
-      precision: "100.0%",
-      recall: "68.0%",
-      extracted_chemicals: 117,
-      actual_chemicals: 172,
-      matched: 116,
-      extra: 0,
-      missing: 54,
+      key: "matched_chemicals",
+      label: "Matched Chemicals",
+      className: "text-[--ul-text-primary]",
     },
     {
-      file_name: "Canada - CEPA - Source.pdf.md",
-      list_id: "8665",
-      precision: "100.0%",
-      recall: "91.0%",
-      extracted_chemicals: 53,
-      actual_chemicals: 58,
-      matched: 53,
-      extra: 0,
-      missing: 5,
+      key: "extra_chemicals",
+      label: "Extra Chemicals",
+      className: "text-[--ul-text-primary]",
     },
     {
-      file_name: "Canada - CEPA - ODS and Halocarbon Alternatives.pdf.md",
-      list_id: "1301",
-      precision: "100.0%",
-      recall: "92.0%",
-      extracted_chemicals: 31,
-      actual_chemicals: 12,
-      matched: 11,
-      extra: 0,
-      missing: 1,
-    },
-    {
-      file_name: "Canada - CEPA - ODS and Halocarbon Alternatives.pdf.md",
-      list_id: "1303",
-      precision: "75.0%",
-      recall: "64.0%",
-      extracted_chemicals: 67,
-      actual_chemicals: 42,
-      matched: 27,
-      extra: 9,
-      missing: 15,
-    },
-    {
-      file_name: "Canada - CEPA - ODS and Halocarbon Alternatives.pdf.md",
-      list_id: "7597",
-      precision: "100%",
-      recall: "100%",
-      extracted_chemicals: 0,
-      actual_chemicals: 0,
-      matched: 0,
-      extra: 0,
-      missing: 0,
+      key: "missed_chemicals",
+      label: "Missed Chemicals",
+      className: "text-[--ul-text-primary]",
     },
   ];
-
-  // Group the CAS metrics by file name to handle rowspan
-  const groupedCasMetrics: { [key: string]: CasMetric[] } = {};
-  casMetrics.forEach((metric) => {
-    if (!groupedCasMetrics[metric.file_name]) {
-      groupedCasMetrics[metric.file_name] = [];
-    }
-    groupedCasMetrics[metric.file_name].push(metric);
-  });
-
   return (
     <div className="space-y-8 mt-5">
       <div>
-        <h2 className="text-xl font-bold mb-4">Overall Evaluation Metrics</h2>
+        <h2 className="text-3xl font-normal mb-4">Overall Metrics</h2>
       </div>
-
       <div>
-        <h2 className="text-xl font-bold mb-4">CAS</h2>
-        <div className="rounded-md border mb-4 mt-2">
+        <h2 className="text-2xl font-normal mb-4">CAS</h2>
+        <div className=" border mb-4 mt-2">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50 hover:bg-slate-50">
-                <TableHead className="font-medium ">No. of Docs</TableHead>
-                <TableHead className="font-medium ">No. of Lists</TableHead>
-                <TableHead className="font-medium ">
-                  Overall Precision CAS
+              <TableRow className="rounderd">
+                <TableHead className="font-medium uppercase">
+                  Avg. Precision
                 </TableHead>
-                <TableHead className="font-medium ">
-                  Overall Recall CAS
+                <TableHead className="font-medium uppercase">
+                  Avg. Recall
                 </TableHead>
-                <TableHead className="font-medium ">
-                  Overall Extracted CAS
+                <TableHead className="font-medium uppercase">
+                  Extracted Chemicals
                 </TableHead>
-                <TableHead className="font-medium ">
-                  Overall Actual CAS
+                <TableHead className="font-medium uppercase">
+                  Actual Chemicals
                 </TableHead>
-                <TableHead className="font-medium ">
-                  Overall Matched CAS
+                <TableHead className="font-medium uppercase">
+                  Matched Chemicals
                 </TableHead>
-                <TableHead className="font-medium ">
-                  Overall Extra CAS
+                <TableHead className="font-medium uppercase">
+                  Missed Chemicals
                 </TableHead>
-                <TableHead className="font-medium ">
-                  Overall Missing CAS
+                <TableHead className="font-medium uppercase">
+                  Extra Chemicals
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
                 <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.no_docs || 0}
+                  {overall_metrics?.precision || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.no_of_lists || 0}
+                  {overall_metrics?.recall || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.overall_precision_cas || 0}
+                  {overall_metrics?.extracted || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.overall_recall_cas || 0}
+                  {overall_metrics?.actual || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.overall_extracted_cas || 0}
+                  {overall_metrics?.matched || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.overall_actual_cas || 0}
+                  {overall_metrics?.missed || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.overall_matched_cas || 0}
-                </TableCell>
-                <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.overall_extra_cas || 0}
-                </TableCell>
-                <TableCell className="text-center">
-                  {proccessData?.cas_metrics_json?.overall_missing_cas || 0}
+                  {overall_metrics?.extra || 0}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
         <div className="rounded-md border overflow-hidden">
-          <Table>
+          <ChemicalTable isMetrics={true} columns={metricsColumns} data ={with_list || [] } className="!h-[600px]"/>
+          {/* <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
                 <TableHead className="font-medium  whitespace-nowrap capitalize">
@@ -246,82 +160,76 @@ const MetricsPanel = ({ proccessData }: any) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {proccessData &&
-                proccessData.overall_metrics &&
-                proccessData.overall_metrics.length &&
-                proccessData.overall_metrics.map(
-                  (metric: any, index: number) => (
-                    <TableRow key={`${metric.file_name}-${metric.list_id}`}>
-                      {index === 0 && (
-                        <TableCell
-                          rowSpan={metric.list_length}
-                          className="whitespace-nowrap align-top text-red-500 cursor-pointer text-center"
-                          onClick={() =>
-                            window.open(
-                              `/chemadvisor/document/${metric._id}`,
-                              "_blank"
-                            )
-                          }
-                        >
-                          {metric.file_name}
+              {groupedCASData &&
+                Object.entries(groupedCASData).map(
+                  ([fileName, metrics]: [string, any[]]) =>
+                    metrics.map((metric: any, index: number) => (
+                      <TableRow key={`${metric.file_name}-${metric.list_id}`}>
+                        {index === 0 && (
+                          <TableCell
+                            rowSpan={metrics.length}
+                            className="text-red-500 cursor-pointer text-left w-[500px]"
+                            onClick={() => onSelect(metric._id, "results")}
+                          >
+                            {fileName}
+                          </TableCell>
+                        )}
+                        <TableCell className="text-center">
+                          {metric.list_id}
                         </TableCell>
-                      )}
-                      <TableCell className="text-center">
-                        {metric.list_id}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.precision}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.recall}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.extracted_chemicals}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.actual_chemicals}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.matched}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.extra}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.missing}
-                      </TableCell>
-                    </TableRow>
-                  )
+                        <TableCell className="text-center">
+                          {metric.precision}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.recall}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.extracted_chemicals}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.actual_chemicals}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.matched}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.extra}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.missing}
+                        </TableCell>
+                      </TableRow>
+                    ))
                 )}
             </TableBody>
-          </Table>
+          </Table> */}
         </div>
       </div>
       <div>
-        <h2 className="text-xl font-bold mb-4">RR</h2>
-        <div className="rounded-md border mb-4 mt-2">
+        {/* <h2 className="text-2xl font-normal mb-4">RR</h2>
+        <div className="border mb-4 mt-2">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50 hover:bg-slate-50">
-                <TableHead className="font-medium ">No. of Docs</TableHead>
-                <TableHead className="font-medium ">No. of Lists</TableHead>
-                <TableHead className="font-medium ">
+              <TableRow className=" hover:bg-slate-50 ">
+                <TableHead className="font-medium uppercase">No. of Docs</TableHead>
+                <TableHead className="font-medium uppercase">No. of Lists</TableHead>
+                <TableHead className="font-medium uppercase">
                   Overall Precision RR
                 </TableHead>
-                <TableHead className="font-medium ">
+                <TableHead className="font-medium uppercase ">
                   Overall Recall RR
                 </TableHead>
-                <TableHead className="font-medium ">
+                <TableHead className="font-medium uppercase">
                   Overall Extracted RR
                 </TableHead>
-                <TableHead className="font-medium ">
+                <TableHead className="font-medium uppercase">
                   Overall Actual RR
                 </TableHead>
-                <TableHead className="font-medium ">
+                <TableHead className="font-medium uppercase">
                   Overall Matched RR
                 </TableHead>
-                <TableHead className="font-medium ">Overall Extra RR</TableHead>
-                <TableHead className="font-medium ">
+                <TableHead className="font-medium uppercase">Overall Extra RR</TableHead>
+                <TableHead className="font-medium uppercase">
                   Overall Missing RR
                 </TableHead>
               </TableRow>
@@ -329,7 +237,7 @@ const MetricsPanel = ({ proccessData }: any) => {
             <TableBody>
               <TableRow>
                 <TableCell className="text-center">
-                  {proccessData?.rr_metrics_json?.no_docs || 0}
+                  {proccessData?.rr_metrics_json?.no_of_docs || 0}
                 </TableCell>
                 <TableCell className="text-center">
                   {proccessData?.rr_metrics_json?.no_of_lists || 0}
@@ -358,12 +266,13 @@ const MetricsPanel = ({ proccessData }: any) => {
               </TableRow>
             </TableBody>
           </Table>
-        </div>
-        <div className="rounded-md border overflow-hidden">
-          <Table>
+        </div> */}
+        {/* <div className="rounded-md border overflow-hidden">
+          <ChemicalTable columns={metricsColumns} data ={proccessData?.overall_metrics_rr||[]} className="!h-[600px]"/>
+          {/* <Table className="w-full">
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
-                <TableHead className="font-medium  whitespace-nowrap capitalize">
+                <TableHead className="font-medium  whitespace-nowrap capitalizee">
                   File Name
                 </TableHead>
                 <TableHead className="font-medium font-bold capitalize">
@@ -389,56 +298,50 @@ const MetricsPanel = ({ proccessData }: any) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {proccessData &&
-                proccessData.overall_metrics_rr &&
-                proccessData.overall_metrics_rr.length &&
-                proccessData.overall_metrics_rr.map(
-                  (metric: any, index: number) => (
-                    <TableRow key={`${metric.file_name}-${metric.list_id}`}>
-                      {index === 0 && (
-                        <TableCell
-                          rowSpan={metric.list_length}
-                          className="whitespace-nowrap align-top text-red-500 cursor-pointer text-center"
-                          onClick={() =>
-                            window.open(
-                              `/chemadvisor/document/${metric._id}`,
-                              "_blank"
-                            )
-                          }
-                        >
-                          {metric.file_name}
+              {groupedRRData &&
+                Object.entries(groupedRRData).map(
+                  ([fileName, metrics]: [string, any[]]) =>
+                    metrics.map((metric: any, index: number) => (
+                      <TableRow key={`${metric.file_name}-${metric.list_id}`}>
+                        {index === 0 && (
+                          <TableCell
+                            rowSpan={metrics.length}
+                            className="text-red-500 cursor-pointer text-left w-[500px]"
+                            onClick={() => onSelect(metric._id, "results")}
+                          >
+                            {fileName}
+                          </TableCell>
+                        )}
+                        <TableCell className="text-center">
+                          {metric.list_id}
                         </TableCell>
-                      )}
-                      <TableCell className="text-center">
-                        {metric.list_id}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.precision}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.recall}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.extracted_chemicals}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.actual_chemicals}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.matched}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.extra}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {metric.missing}
-                      </TableCell>
-                    </TableRow>
-                  )
+                        <TableCell className="text-center">
+                          {metric.precision}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.recall}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.extracted_chemicals}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.actual_chemicals}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.matched}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.extra}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {metric.missing}
+                        </TableCell>
+                      </TableRow>
+                    ))
                 )}
             </TableBody>
-          </Table>
-        </div>
+          </Table> */}
+        {/* </div>  */}
       </div>
     </div>
   );

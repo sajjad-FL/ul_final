@@ -197,7 +197,8 @@ const Chemadvisor = () => {
       });
   };
   const getProcessDataByVersion = async (version_id: string) => {
-    await getProcessesByVersion(version_id)
+    console.log(version_id)
+    await getProcessesByVersion()
       .then((res) => {
         if (res) {
           if (res.status === 200) {
@@ -367,7 +368,7 @@ const Chemadvisor = () => {
   return (
     <section className="">
       <div className="container mx-auto px-2 py-8 w-full mt-2">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center w-full">
+        <h1 className="text-3xl font-bold text-red-800 mb-[10px] text-center w-full">
           chemADVISOR
         </h1>
 

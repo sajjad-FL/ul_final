@@ -1,48 +1,58 @@
-"use client";
+'use client';
 
-import { Button } from "@heroui/button";
-import { useEffect, useRef, useState } from "react";
-import { Form } from "react-hook-form";
-import toast from "react-hot-toast";
-import { TagsInput } from "react-tag-input-component";
-import { Select, SelectItem } from "@heroui/select";
-import { Circle } from "lucide-react";
+import { Button } from '@heroui/button';
+import { useEffect, useRef, useState } from 'react';
+import { Form } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import { TagsInput } from 'react-tag-input-component';
+import { Select, SelectItem } from '@heroui/select';
+import { Circle } from 'lucide-react';
+import { Switch } from '@heroui/switch';
+import { CircularProgress } from '@heroui/progress';
+import clsx from 'clsx';
+import { Chip } from '@heroui/chip';
 
-import DocumentDetails from "./DocumentDetails";
+import DocumentDetails from './DocumentDetails';
 
-import FileUploadTab from "@/components/FileUploadTab";
+import FileUploadTab from '@/components/FileUploadTab';
 import {
+  getAllDocumentData,
+  getAllDocumentDataByFilename,
   getExtractedData,
-  getProcessesByVersion,
-  getVersions,
+  // getVersions,
   uploadFile,
   uploadText,
-} from "@/services/APIServices";
-import { fileSchema, textSchema } from "@/schemas";
+} from '@/services/APIServices';
+import { fileSchema, textSchema } from '@/schemas';
 import ReactHookForm, {
   FormMethods,
   getErrorMessage,
-} from "@/hooks/ReactHookForm";
-import TextInputTab from "@/components/TextInputTab";
-import { SkeletonLoading } from "@/components/SkeletonLoading";
-import MetricsOverviewV1 from "@/components/Metrics_v1";
-import TabNavigation from "@/components/TabNavigation";
-import MetricsPanel from "@/components/MetricsPanel";
-import ChemicalResultsSection from "@/components/ChemicalResultsSection";
+} from '@/hooks/ReactHookForm';
+import MetricsOverviewV1 from '@/components/Metrics_v1';
+import TabNavigation from '@/components/TabNavigation';
+import MetricsPanel from '@/components/MetricsPanel';
+import ChemicalResultsSection from '@/components/ChemicalResultsSection';
+import LoadingSpinner from '@/components/Spinner';
+import Header from '@/components/Header';
+import HtmlRenderer from '@/components/HtmlRenderer';
 
 const Chemadvisor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<any>(null);
   const [homeActiveTab, setHomeActiveTab] = useState<any>(null);
   const [extractionData, setExtractionData] = useState<any>({});
-  const [extractionMetricsData, setExtractionMetricsData] = useState<any>([]);
-  const [listIds, setListIds] = useState<string[]>([]);
+  // const [extractionMetricsData] = useState<any>([]);
   const [error, setError] = useState<string | null>(null);
-  const [versions, setVersions] = useState<any[]>(["v1"]);
-  const [selectedVersion, setSelectedVersion] = useState<string>("");
+  // const [versions] = useState<any[]>(["v1"]);
+  const [selectedVersion, setSelectedVersion] = useState<string[]>([]);
   const dataLoadingRef = useRef<any>(null);
-
+  const [metricsLoading, setMetricsLoading] = useState<boolean>(false);
   const [processesData, setProcessesData] = useState<any>({});
+  const [documentList, setDocumentList] = useState<any[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState<any>({});
+  const [documentLoading, setDocumentLoading] = useState<boolean>(false);
+  const [extractingPercentage, setExtractingPercentage] = useState<number>(0);
+  const MAX_CHARS = 10000;
 
   interface CASMetrics {
     matched: string[];
@@ -79,41 +89,54 @@ const Chemadvisor = () => {
   }
 
   const textExtract = async (values: any) => {
-    toast.success("Chemical Extraction Started...");
+    toast.success('Chemical Extraction Started');
     setIsLoading(true);
     setError(null);
     try {
-      const listIds = values.list_data || [];
+      const listIds = (values.list_id && values.list_data) || [];
       const inputData = values.input_data;
-      const { data, status } = await uploadText(inputData, listIds);
+      const { data, status }: any = await uploadText(inputData, listIds);
 
       if (status === 200 && data) {
-        const textExtractionData = {
-          ...data,
-        };
+        const textExtractionData = data || {};
 
-        setExtractionData(textExtractionData);
-        setIsLoading(false);
-        toast.success("Chemical Extraction Completed");
+        if (textExtractionData.status === 'processing') {
+          dataLoadingRef.current = setInterval(() => {
+            getDataById(textExtractionData.id);
+          }, 10000);
+        }
+        if (textExtractionData.status === 'completed') {
+          setExtractionData(textExtractionData);
+          if (dataLoadingRef.current) {
+            clearInterval(dataLoadingRef.current);
+          }
+          setExtractingPercentage(0);
+          toast.success('Chemical Extraction Completed!');
+          setIsLoading(false);
+        }
       } else {
-        throw new Error("Unexpected response from server.");
+        throw new Error('Unexpected response from server.');
       }
     } catch (err: any) {
       const errorMsg =
-        err?.response?.data?.message || err?.message || "Something went wrong";
+        err?.response?.data?.message || err?.message || 'Something went wrong';
 
-      setError(errorMsg);
+      // setError(errorMsg);
       toast.error(`Chemical Extraction Failed: ${errorMsg}`);
-    } finally {
       setIsLoading(false);
+      if (dataLoadingRef.current) {
+        clearInterval(dataLoadingRef.current);
+      }
+    } finally {
+      // setIsLoading(false);
     }
   };
   const fileExtract = async (values: any) => {
-    toast.success("Chemical Extraction Started...");
+    toast.success('Chemical Extraction Started');
     setIsLoading(true);
     setError(null);
     try {
-      const listIds = values.list_data || [];
+      const listIds = (values.list_id && values.list_data) || [];
       const fileData = values.file;
 
       const { data, status } = await uploadFile(fileData, listIds);
@@ -121,25 +144,32 @@ const Chemadvisor = () => {
       if (status === 200 && data) {
         const textExtractionData = data || {};
 
-        if (textExtractionData.status === "processing") {
+        if (textExtractionData.status === 'processing') {
           dataLoadingRef.current = setInterval(() => {
             getDataById(textExtractionData.id);
           }, 10000);
         }
-        if (textExtractionData.status === "completed") {
+        if (textExtractionData.status === 'completed') {
+          if (dataLoadingRef.current) {
+            clearInterval(dataLoadingRef.current);
+          }
           setExtractionData(textExtractionData);
-          toast.success("Chemical Extraction Completed!");
+          toast.success('Chemical Extraction Completed!');
           setIsLoading(false);
         }
       } else {
-        throw new Error("Unexpected response from server.");
+        throw new Error('Unexpected response from server.');
       }
     } catch (err: any) {
       const errorMsg =
-        err?.response?.data?.message || err?.message || "Something went wrong";
+        err?.response?.data?.message || err?.message || 'Something went wrong';
 
-      setError(errorMsg);
+      // setError(errorMsg);
+      setIsLoading(false);
       toast.error(`Chemical Extraction Failed: ${errorMsg}`);
+      if (dataLoadingRef.current) {
+        clearInterval(dataLoadingRef.current);
+      }
     } finally {
     }
   };
@@ -151,38 +181,54 @@ const Chemadvisor = () => {
           if (res.status === 200) {
             const data = res?.data || {};
 
-            if (data.status === "completed") {
+            if (data.status === 'completed') {
               const extractionData = data || {};
 
               extractionData._id = extractionData.id;
               setExtractionData(extractionData);
               setIsLoading(false);
+              setExtractingPercentage(0);
+              toast.success('Chemical Extraction Completed!');
               dataLoadingRef.current && clearInterval(dataLoadingRef.current);
+            } else if (data.status === 'processing') {
+              const total = data?.documents?.chunks_count || 1;
+              const processed = data?.chunks_completed || 0;
+              const percentage = Math.round((processed / total) * 100);
+
+              setExtractingPercentage(percentage > 100 ? 100 : percentage);
             }
-            if (data.status === "failed") {
+            if (data.status === 'failed') {
               setExtractionData({});
               setIsLoading(false);
+              setExtractingPercentage(0);
               dataLoadingRef.current && clearInterval(dataLoadingRef.current);
             }
           }
         } else {
-          console.error("Error ooccurred while fetching the data!");
-          setError("Error ooccurred while fetching the data!");
+          console.error('Error ooccurred while fetching the data!');
+          setError('Error ooccurred while fetching the data!');
+          setExtractionData({});
+          setIsLoading(false);
+          setExtractingPercentage(0);
+          dataLoadingRef.current && clearInterval(dataLoadingRef.current);
           // dataLoadingRef.current && clearInterval(dataLoadingRef.current);
         }
       })
-      .catch((err) => {
+      .catch(() => {
         setIsLoading(false);
-        setError("Error ooccurred while fetching the data!");
-        console.error(err);
-        // dataLoadingRef.current && clearInterval(dataLoadingRef.current);
+        setError('Error ooccurred while fetching the data!');
+        setExtractionData({});
+        setIsLoading(false);
+        setExtractingPercentage(0);
+        dataLoadingRef.current && clearInterval(dataLoadingRef.current);
       });
   };
 
   const getMetricsVersionData = async () => {
-    const res = await getProcessesByVersion("7y90");
+    setMetricsLoading(true);
+    const res = await getAllDocumentData();
     // let data: DocData[] = res?.data || [];
-    let data: DocData[] = res || [];
+    let data: DocData[] = res?.allDocuments || [];
 
     // const data: DocData[] = []; // your input data
     const overall_metrics: SummaryMetrics[] = [];
@@ -197,17 +243,22 @@ const Chemadvisor = () => {
     const extra_rr: number[] = [];
     const no_docs = data.length;
     let no_lists = 0;
+    let d_list: any[] = res?.documentsList || [];
 
-    data.map((each: any) => {
+    data.map((each: any, index: number) => {
       let _id = each?._id?.$oid;
 
+      if (index === 0) {
+        setSelectedVersion([_id]);
+        setSelectedDocument({ ...each, _id });
+      }
       if (each.result?.metrics) {
         const listLength = each.list_ids.length || 1;
         const doc = each.result || {};
 
         each.list_ids.forEach((list_id: string, i: number) => {
-          no_lists++;
-          const file_name = each.file_path?.split("/").pop() || "";
+          no_lists += 1;
+          // const file_name = each.file_path?.split("/").pop() || "";
           const cas = doc.metrics[i].CAS;
           const cas_rr = doc.metrics_rr[i].CAS;
 
@@ -220,7 +271,7 @@ const Chemadvisor = () => {
           extra_rr.push(cas_rr.extra.length);
 
           overall_metrics.push({
-            file_name,
+            file_name: each.filename,
             list_length: listLength,
             list_id: parseInt(list_id),
             precision: `${(cas.precision * 100).toFixed(2)}%`,
@@ -235,7 +286,7 @@ const Chemadvisor = () => {
           });
 
           overall_metrics_rr.push({
-            file_name,
+            file_name: each.filename,
             list_length: listLength,
             list_id: parseInt(list_id),
             precision: `${(cas_rr.precision * 100).toFixed(2)}%`,
@@ -250,8 +301,9 @@ const Chemadvisor = () => {
         });
       }
 
-      return each;
+      return { ...each, _id };
     });
+    setDocumentList(d_list);
 
     // Helper function
     const sum = (arr: number[]) => arr.reduce((acc, val) => acc + val, 0);
@@ -264,11 +316,11 @@ const Chemadvisor = () => {
     const cas_recall = safeDivide(sum(matched), sum(matched) + sum(missed));
     const rr_precision = safeDivide(
       sum(matched_rr),
-      sum(matched_rr) + sum(extra_rr),
+      sum(matched_rr) + sum(extra_rr)
     );
     const rr_recall = safeDivide(
       sum(matched_rr),
-      sum(matched_rr) + sum(missed_rr),
+      sum(matched_rr) + sum(missed_rr)
     );
 
     const totalMatched = sum(matched);
@@ -280,7 +332,7 @@ const Chemadvisor = () => {
 
     const cas_metrics_json = {
       no_docs: no_docs,
-      list_length: matched.length,
+      no_of_lists: no_lists,
       overall_precision_cas: `${(cas_precision * 100).toFixed(2)}%`,
       overall_recall_cas: `${(cas_recall * 100).toFixed(2)}%`,
       overall_extracted_cas: totalMatched + totalExtra,
@@ -292,7 +344,7 @@ const Chemadvisor = () => {
 
     const rr_metrics_json = {
       no_of_docs: no_docs,
-      no_of_lists: matched_rr.length,
+      no_of_lists: no_lists,
       overall_precision_rr: `${(rr_precision * 100).toFixed(2)}%`,
       overall_recall_rr: `${(rr_recall * 100).toFixed(2)}%`,
       overall_extracted_rr: totalMatchedRR + totalExtraRR,
@@ -320,216 +372,12 @@ const Chemadvisor = () => {
       cas_metrics_json,
       rr_metrics_json,
     });
+    setMetricsLoading(false);
   };
 
   useEffect(() => {
     getMetricsVersionData();
   }, []);
-
-  const getVersionData = async () => {
-    await getVersions()
-      .then((res) => {
-        if (res) {
-          if (res.status === 200) {
-            let data = res?.data || {};
-
-            data = data.map((each: any) => {
-              let _id = each?._id?.$oid;
-
-              return {
-                ...each,
-                _id,
-                label: each.version,
-                value: _id,
-              };
-            });
-            if (data.length) {
-              setSelectedVersion(data[0].value);
-              getProcessDataByVersion(data[0]._id);
-            }
-
-            setVersions(data);
-          }
-        } else {
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  };
-  const getProcessDataByVersion = async (version_id: string) => {
-    await getProcessesByVersion(version_id)
-      .then((res) => {
-        if (res) {
-          if (res.status === 200) {
-            // let data: DocData[] = res?.data || [];
-            let data: DocData[] = extractionMetricsData || [];
-
-            // const data: DocData[] = []; // your input data
-            console.log(data);
-            const overall_metrics: SummaryMetrics[] = [];
-            const overall_metrics_rr: SummaryMetrics[] = [];
-
-            const matched: number[] = [];
-            const missed: number[] = [];
-            const extra: number[] = [];
-
-            const matched_rr: number[] = [];
-            const missed_rr: number[] = [];
-            const extra_rr: number[] = [];
-            const no_docs = data.length;
-            let no_lists = 0;
-
-            data.map((each: any) => {
-              console.log({ each });
-              let _id = each?._id?.$oid;
-
-              if (each.result?.metrics) {
-                const listLength = each.list_ids.length || 1;
-                const doc = each.result || {};
-
-                each.list_ids.forEach((list_id: string, i: number) => {
-                  no_lists++;
-                  const file_name = each.file_path.split("/").pop() || "";
-                  const cas = doc.metrics[i].CAS;
-                  const cas_rr = doc.metrics_rr[i].CAS;
-
-                  matched.push(cas.matched.length);
-                  missed.push(cas.missed.length);
-                  extra.push(cas.extra.length);
-
-                  matched_rr.push(cas_rr.matched.length);
-                  missed_rr.push(cas_rr.missed.length);
-                  extra_rr.push(cas_rr.extra.length);
-
-                  overall_metrics.push({
-                    file_name,
-                    list_length: listLength,
-                    list_id: parseInt(list_id),
-                    precision: `${(cas.precision * 100).toFixed(2)}%`,
-                    recall: `${(cas.recall * 100).toFixed(2)}%`,
-                    extracted_chemicals:
-                      each?.result?.extracted_chemicals[i].length || 0,
-                    actual_chemicals:
-                      each?.result?.actual_chemicals?.[i].length || 0,
-                    matched: cas.matched.length,
-                    extra: cas.extra.length,
-                    missing: cas.missed.length,
-                    _id,
-                  });
-
-                  overall_metrics_rr.push({
-                    file_name,
-                    list_length: listLength,
-                    list_id: parseInt(list_id),
-                    precision: `${(cas_rr.precision * 100).toFixed(2)}%`,
-                    recall: `${(cas_rr.recall * 100).toFixed(2)}%`,
-                    extracted_chemicals:
-                      each?.result?.extracted_chemicals_rr[i].length,
-                    actual_chemicals:
-                      each?.result?.actual_chemicals_rr[i].length,
-                    matched: cas_rr.matched.length,
-                    extra: cas_rr.extra.length,
-                    missing: cas_rr.missed.length,
-                    _id,
-                  });
-                });
-              }
-
-              return each;
-            });
-
-            // Helper function
-            const sum = (arr: number[]) =>
-              arr.reduce((acc, val) => acc + val, 0);
-
-            const safeDivide = (
-              numerator: number,
-              denominator: number,
-            ): number => {
-              return denominator === 0 ? 0 : numerator / denominator;
-            };
-
-            const cas_precision = safeDivide(
-              sum(matched),
-              sum(matched) + sum(extra),
-            );
-            const cas_recall = safeDivide(
-              sum(matched),
-              sum(matched) + sum(missed),
-            );
-            const rr_precision = safeDivide(
-              sum(matched_rr),
-              sum(matched_rr) + sum(extra_rr),
-            );
-            const rr_recall = safeDivide(
-              sum(matched_rr),
-              sum(matched_rr) + sum(missed_rr),
-            );
-
-            const totalMatched = sum(matched);
-            const totalExtra = sum(extra);
-            const totalMissed = sum(missed);
-            const totalMatchedRR = sum(matched_rr);
-            const totalExtraRR = sum(extra_rr);
-            const totalMissedRR = sum(missed_rr);
-
-            const cas_metrics_json = {
-              no_docs: no_docs,
-              list_length: matched.length,
-              overall_precision_cas: `${(cas_precision * 100).toFixed(2)}%`,
-              overall_recall_cas: `${(cas_recall * 100).toFixed(2)}%`,
-              overall_extracted_cas: totalMatched + totalExtra,
-              overall_actual_cas: totalMatched + totalMissed,
-              overall_matched_cas: totalMatched.toString(),
-              overall_extra_cas: totalExtra.toString(),
-              overall_missing_cas: totalMissed.toString(),
-            };
-
-            const rr_metrics_json = {
-              no_of_docs: no_docs,
-              no_of_lists: matched_rr.length,
-              overall_precision_rr: `${(rr_precision * 100).toFixed(2)}%`,
-              overall_recall_rr: `${(rr_recall * 100).toFixed(2)}%`,
-              overall_extracted_rr: totalMatchedRR + totalExtraRR,
-              overall_actual_rr: totalMatchedRR + totalMissedRR,
-              overall_matched_rr: totalMatchedRR.toString(),
-              overall_extra_rr: totalExtraRR.toString(),
-              overall_missing_rr: totalMissedRR.toString(),
-            };
-
-            setProcessesData({
-              cas_precision,
-              cas_recall,
-              rr_precision,
-              rr_recall,
-              matched,
-              missed,
-              extra,
-              matched_rr,
-              missed_rr,
-              extra_rr,
-              overall_metrics,
-              overall_metrics_rr,
-              no_docs,
-              no_lists,
-              cas_metrics_json,
-              rr_metrics_json,
-            });
-          }
-        } else {
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  };
-
-  useEffect(() => {
-    getVersionData();
-  }, []);
-  console.log(extractionData, "extractionData");
-  console.log({ activeTab });
 
   const clearData = () => {
     // setExtractionData(null);
@@ -538,24 +386,23 @@ const Chemadvisor = () => {
   const clearFileUploadData = () => {
     // setExtractionData(null);
   };
-
   const containerTabs = [
     {
-      label: "Home",
-      value: "home",
+      label: 'Home',
+      value: 'home',
       onClick: () => {
         clearData();
         clearFileUploadData();
       },
     },
     {
-      label: "Metrics",
-      value: "metrics",
+      label: 'Metrics',
+      value: 'metrics',
       onClick: () => clearData(),
     },
     // {
-    //   label: "Results",
-    //   value: "results",
+    //   label: 'Results',
+    //   value: 'results',
     //   onClick: () => {
     //     clearData();
     //     clearFileUploadData();
@@ -565,53 +412,87 @@ const Chemadvisor = () => {
 
   const homeTabs = [
     {
-      label: "Text Input",
-      value: "text",
+      label: 'Text Input',
+      value: 'text',
       onClick: () => {
         // clearData();
         // clearFileUploadData();
       },
+      isFirst: true,
     },
     {
-      label: "File Upload",
-      value: "file",
+      label: 'File Upload',
+      value: 'file',
       // onClick: () => clearData(),
+      isLast: true,
     },
   ];
-
-  console.log({ extractionData, listIds });
-
-  const hasListIds = Array.isArray(listIds) && listIds.length > 0;
 
   const extractedChemicalsList =
     extractionData?.result?.extracted_chemicals || [];
 
+  const onDocumentChange = async (id: string, tab: string) => {
+    setDocumentLoading(true);
+    setSelectedVersion([id]);
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+    }
+    const document = await getAllDocumentDataByFilename(id);
+
+    setSelectedDocument(document || {});
+    setDocumentLoading(false);
+  };
+  const onCancelExtraction = () => {
+    if (dataLoadingRef.current) {
+      clearInterval(dataLoadingRef.current);
+      dataLoadingRef.current = null;
+    }
+    setIsLoading(false);
+    setExtractingPercentage(0);
+    setExtractionData({});
+    toast.error('Chemical Extraction Cancelled!');
+  };
+
   return (
-    <section className="">
-      <div className="container mx-auto px-2 py-2 w-full mt-2">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center w-full">
-          chemADVISOR
+    <section className=''>
+      <Header />
+      <div className=' mx-auto px-16 py-2 w-full mt-2'>
+        <h1 className='font-normal text-[32px] leading-[1.13] tracking-[-0.09375rem] font-poppins'>
+          ChemADVISOR
         </h1>
 
         <TabNavigation
           activeTab={activeTab || containerTabs?.[0]?.value}
-          customClass={""}
-          setActiveTab={setActiveTab}
+          customClass={''}
           tabs={containerTabs}
+          onChange={(tab: string) => {
+            setActiveTab(tab);
+            setExtractionData({});
+          }}
         />
 
-        {activeTab === "home" || activeTab === null ? (
-          <>
+        {activeTab === 'home' || activeTab === null ? (
+          <div className='my-[30px]'>
             <TabNavigation
               activeTab={homeActiveTab || homeTabs?.[0]?.value}
-              customClass={"mt-3"}
-              setActiveTab={setHomeActiveTab}
+              customClass={'mt-3'}
+              innerTabs={true}
               tabs={homeTabs}
+              onChange={(tab: string) => {
+                setHomeActiveTab(tab);
+                setExtractionData({});
+              }}
             />
-            {homeActiveTab === "text" || homeActiveTab === null ? (
-              <div>
+
+            {homeActiveTab === 'text' || homeActiveTab === null ? (
+              <div className='mt-4'>
                 <ReactHookForm
-                  defaultValues={{ input_data: "", list_data: [] }}
+                  defaultValues={{
+                    input_data: '',
+                    list_data: [],
+                    list_id: false,
+                    input_data_length: 0,
+                  }}
                   validationSchema={textSchema}
                   onSubmit={(data) => {
                     textExtract(data);
@@ -624,129 +505,241 @@ const Chemadvisor = () => {
                     trigger,
                     getValues,
                     formState: { errors },
-                  }: FormMethods) => (
-                    <Form onSubmit={formSubmit}>
-                      <TextInputTab
-                        errors={errors}
-                        name="input_data"
-                        register={register}
-                      />
-                      {errors?.input_data && errors?.input_data?.message && (
-                        <span className="error text-red-500 px-6 text-sm">
-                          {getErrorMessage(errors?.input_data)}
-                        </span>
-                      )}
+                  }: FormMethods) => {
+                    return (
+                      <Form onSubmit={formSubmit}>
+                        <div className='flex flex-col items-start w-[40%] mb-2'>
+                          <textarea
+                            className='my-2 mt-7 w-full  min-h-[250px] border-1 border-[#AEAEC031] rounded-md p-4 focus:outline-none focus-visible:outline-none'
+                            placeholder='Paste text here...'
+                            value={getValues().input_data || ''}
+                            onChange={(e) => {
+                              let value = e.target.value;
+                              let textLength = value.length;
 
-                      <div className="mt-2">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2 ">
-                          Enter a list ID.
-                        </h3>
-                        <TagsInput
-                          name="list_data"
-                          placeHolder="Enter a list ID and press enter"
-                          separators={[",", " ", "Enter", "Tab"]}
-                          value={getValues().list_data || []}
-                          onChange={(ids: string[]) => {
-                            setListIds(ids);
-                            setValue("list_data", ids, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            });
-                            trigger("list_data");
+                              setValue('input_data', e.target.value, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                              setValue('input_data_length', textLength);
+                              trigger('input_data');
+                            }}
+                          />
+                          <div
+                            className={clsx(
+                              'text-sm mt-1 text-right items-end  w-full',
+                              getValues().input_data_length >= MAX_CHARS
+                                ? 'text-red-500'
+                                : 'text-[--ul-text-secondary]'
+                            )}
+                          >
+                            {getValues().input_data_length} / {MAX_CHARS}
+                          </div>
+                          {errors?.input_data &&
+                            errors?.input_data?.message && (
+                              <span className='error text-red-500 text-sm'>
+                                {getErrorMessage(errors?.input_data)}
+                              </span>
+                            )}
+                        </div>
+                        <Switch
+                          defaultSelected
+                          classNames={{
+                            wrapper:
+                              'group-data-[selected=true]:bg-[--ul-bg-primary]',
                           }}
-                        />
-                        {errors?.list_data && errors?.list_data?.message && (
-                          <span className="error text-red-500  text-sm">
-                            {getErrorMessage(errors?.list_data)}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mb-1 mt-4">
-                        <Button
-                          className="bg-white  font-semibold py-2 px-4  rounded-md bg-[#8a1721] text-white"
-                          disabled={isLoading}
-                          isLoading={isLoading}
-                          type="submit"
+                          size='sm'
+                          {...register('list_id')}
+                          isSelected={getValues().list_id || false}
+                          onValueChange={(check: boolean) => {
+                            setValue('list_id', check);
+                            trigger('list_id');
+                          }}
                         >
-                          Extract Chemicals
-                        </Button>
-                      </div>
-                    </Form>
-                  )}
+                          Match List IDs
+                        </Switch>
+
+                        {getValues().list_id && (
+                          <div className='mt-2 w-[40%]'>
+                            <h3 className='text-sm font-medium text-gray-700 mb-2 '>
+                              Enter a list ID.
+                            </h3>
+                            <TagsInput
+                              name='list_data'
+                              placeHolder='Enter a list ID and press enter'
+                              separators={[',', ' ', 'Enter', 'Tab']}
+                              value={getValues().list_data || []}
+                              onChange={(ids: string[]) => {
+                                setValue('list_data', ids, {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                });
+                                trigger('list_data');
+                              }}
+                            />
+                            {errors?.list_data &&
+                              errors?.list_data?.message && (
+                                <span className='error text-red-500  text-sm'>
+                                  {getErrorMessage(errors?.list_data)}
+                                </span>
+                              )}
+                          </div>
+                        )}
+
+                        <div className='mb-1 mt-4'>
+                          {isLoading ? (
+                            <div className='flex items-center gap-2'>
+                              <Button
+                                className='bg-white  font-semibold py-2 px-4  rounded-lg bg-[--ul-bg-primary] text-white'
+                                onPress={() => onCancelExtraction()}
+                              >
+                                Cancel
+                              </Button>
+                              <CircularProgress
+                                aria-label='Loading...'
+                                classNames={{
+                                  svg: 'text-[--ul-bg-primary] w-14 h-14',
+                                }}
+                                showValueLabel={true}
+                                size='lg'
+                                value={extractingPercentage || 0}
+                              />
+                              <span className='text-[--ul-text-primary] font-semibold flex items-center gap-2'>
+                                <span>Extracting Chemicals</span>{' '}
+                                <div className='dot-flashing ml-3 mt-1' />
+                              </span>
+                            </div>
+                          ) : (
+                            <Button
+                              className='bg-white text-xl font-normal rounded-xl bg-[--ul-bg-primary] text-white font-poppins p-4'
+                              disabled={isLoading}
+                              isLoading={isLoading}
+                              size='md'
+                              type='submit'
+                            >
+                              Extract
+                            </Button>
+                          )}
+                        </div>
+                      </Form>
+                    );
+                  }}
                 </ReactHookForm>
 
-                <div className="extraction-data">
-                  {isLoading ? (
-                    <SkeletonLoading />
-                  ) : error ? (
-                    <div className="text-white text-center mt-4 font-medium border border-red-200 bg-red-500/90 rounded-md p-2 mt-2">
+                <div className='extraction-data'>
+                  {error ? (
+                    <div className='text-white text-center mt-4 font-medium border border-red-200 bg-red-500/90 rounded-md p-2 mt-2'>
                       {error}
                     </div>
                   ) : extractionData && Object.keys(extractionData)?.length ? (
-                    <div className="space-y-6 mt-4">
-                      <div className="flex justify-between items-center mt-2">
-                        <h2 className="text-2xl font-bold text-gray-800">
+                    <div className='space-y-6 mt-4'>
+                      <div className='flex justify-between items-center mt-2'>
+                        <h2 className='text-2xl font-bold text-gray-800'>
                           Extracted Chemicals
                         </h2>
                       </div>
-                      {hasListIds ? (
-                        listIds?.map((listId: any, index: number) => {
-                          const actual_chemicals =
-                            (extractionData?.result?.actual_chemicals || [])?.[
-                              index
-                            ] || [];
-                          const extracted_chemicals =
-                            (extractionData?.result?.extracted_chemicals ||
-                              [])?.[index] || [];
-                          const actual_chemicals_rr =
-                            (extractionData?.result?.actual_chemicals_rr ||
-                              [])?.[index] || [];
-                          const extracted_chemicals_rr =
-                            (extractionData?.result?.extracted_chemicals_rr ||
-                              [])?.[index] || [];
-                          const metrics =
-                            extractionData?.result?.metrics?.[index] || {};
-                          const metricsRR =
-                            extractionData?.result?.metrics_rr?.[index] || {};
+                      {extractionData.list_ids &&
+                      extractionData.list_ids.length ? (
+                        extractionData.list_ids?.map(
+                          (listId: any, index: number) => {
+                            const actual_chemicals =
+                              (extractionData?.result?.actual_chemicals ||
+                                [])?.[index] || [];
+                            const extracted_chemicals =
+                              (extractionData?.result?.extracted_chemicals ||
+                                [])?.[index] || [];
+                            const actual_chemicals_rr =
+                              (extractionData?.result?.actual_chemicals_rr ||
+                                [])?.[index] || [];
+                            const extracted_chemicals_rr =
+                              (extractionData?.result?.extracted_chemicals_rr ||
+                                [])?.[index] || [];
+                            const metrics =
+                              extractionData?.result?.metrics?.[index] || {};
+                            const metricsRR =
+                              extractionData?.result?.metrics_rr?.[index] || {};
 
-                          return (
-                            <MetricsOverviewV1
-                              key={listId}
-                              actualChemicals={actual_chemicals}
-                              actualChemicalsRR={actual_chemicals_rr}
-                              extractedChemicals={extracted_chemicals}
-                              extractedChemicalsRR={extracted_chemicals_rr}
-                              listId={listId}
-                              metrics={metrics}
-                              metricsRR={metricsRR}
-                            />
-                          );
-                        })
+                            return (
+                              <>
+                                <MetricsOverviewV1
+                                  key={listId}
+                                  actualChemicals={actual_chemicals}
+                                  actualChemicalsRR={actual_chemicals_rr}
+                                  extractedChemicals={extracted_chemicals}
+                                  extractedChemicalsRR={extracted_chemicals_rr}
+                                  listId={listId}
+                                  metrics={metrics}
+                                  metricsRR={metricsRR}
+                                />
+                                <HtmlRenderer htmlContent='' />
+                              </>
+                            );
+                          }
+                        )
                       ) : (
-                        <ChemicalResultsSection
-                          chemicalCategories={[
-                            {
-                              data: extractedChemicalsList,
-                              title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
-                              color: "text-blue-500",
-                              icon: Circle,
-                              columns: Object.keys(extractedChemicalsList?.[0]),
-                            },
-                          ]}
-                        />
+                        <>
+                          <ChemicalResultsSection
+                            chemicalCategories={[
+                              {
+                                data: extractedChemicalsList,
+                                title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
+                                color: 'text-blue-500',
+                                icon: Circle,
+                                columns: Object.keys(
+                                  extractedChemicalsList?.[0] || {}
+                                ).map((key: string) => {
+                                  return {
+                                    key,
+                                    className: 'text-[--ul-text-primary]',
+                                    label:
+                                      key.charAt(0).toUpperCase() +
+                                      key.slice(1),
+                                    ...((key.toLowerCase() === 'cas' ||
+                                      key.toLowerCase() === 'synonyms') && {
+                                      render: (value: string | string[]) => {
+                                        if (
+                                          !value ||
+                                          (Array.isArray(value) &&
+                                            value.length === 0)
+                                        )
+                                          return '';
+
+                                        const valuesArray = Array.isArray(value)
+                                          ? value
+                                          : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+                                        return (
+                                          <>
+                                            {valuesArray?.map(
+                                              (elem: any): any => (
+                                                <Chip className='mr-2'>
+                                                  {elem}
+                                                </Chip>
+                                              )
+                                            )}
+                                          </>
+                                        );
+                                      },
+                                    }),
+                                  };
+                                }),
+                              },
+                            ]}
+                          />
+                          <HtmlRenderer htmlContent='' />
+                        </>
                       )}
                     </div>
                   ) : (
-                    ""
+                    ''
                   )}
                 </div>
               </div>
             ) : null}
 
-            {homeActiveTab === "file" ? (
+            {homeActiveTab === 'file' ? (
               <>
-                <div className="file-upload-section border rounded p-4">
+                <div className='file-upload-section'>
                   <ReactHookForm
                     defaultValues={{ list_data: [] }}
                     validationSchema={fileSchema}
@@ -759,176 +752,277 @@ const Chemadvisor = () => {
                       setValue,
                       trigger,
                       getValues,
+                      register,
                       formState: { errors },
                     }: FormMethods) => (
                       <Form onSubmit={formSubmit}>
-                        <div className="mb-3">
+                        <div className='w-[40%] mt-[45px] mb-[30px]'>
                           <FileUploadTab
                             onFileChange={(file: any) => {
-                              setValue("file", file, {
+                              setValue('file', file, {
                                 shouldValidate: true,
                                 shouldDirty: true,
                               });
-                              trigger("file");
+                              trigger('file');
                             }}
                           />
                           {errors?.file && errors?.file?.message && (
-                            <span className="error text-red-500 px-6 text-sm">
+                            <span className='error text-red-500 px-6 text-sm'>
                               {getErrorMessage(errors.file)}
                             </span>
                           )}
                         </div>
 
-                        <div className="px-6 mt-2">
-                          <h3 className="text-sm font-medium text-gray-700 mb-2">
-                            Enter a list ID.
-                          </h3>
-                          <TagsInput
-                            name="list_data"
-                            placeHolder="Enter a list ID and press enter"
-                            separators={[",", " ", "Enter", "Tab"]}
-                            value={getValues().list_data || []}
-                            onChange={(ids: string[]) => {
-                              setListIds(ids);
-                              setValue("list_data", ids, {
-                                shouldValidate: true,
-                                shouldDirty: true,
-                              });
-                              trigger("list_data");
-                            }}
-                          />
-                          {errors?.list_data && errors?.list_data?.message && (
-                            <span className="error text-red-500 text-sm">
-                              {getErrorMessage(errors.list_data)}
-                            </span>
-                          )}
-                        </div>
+                        <Switch
+                          defaultSelected
+                          classNames={{
+                            wrapper:
+                              'group-data-[selected=true]:bg-[--ul-bg-primary]',
+                          }}
+                          size='sm'
+                          {...register('list_id')}
+                          isSelected={getValues().list_id || false}
+                          onValueChange={(check: boolean) => {
+                            setValue('list_id', check);
+                            trigger('list_id');
+                          }}
+                        >
+                          Match List IDs
+                        </Switch>
 
-                        <div className="mb-1 mt-4 px-6">
-                          <Button
-                            className="bg-white font-semibold py-2 px-4 rounded-md bg-[rgb(138,23,33)] text-white"
-                            disabled={isLoading}
-                            isLoading={isLoading}
-                            type="submit"
-                          >
-                            Extract Chemicals
-                          </Button>
+                        {getValues().list_id && (
+                          <div className='mt-2 w-[40%]'>
+                            <h3 className='text-sm font-medium text-gray-700 mb-2 '>
+                              Enter a list ID.
+                            </h3>
+                            <TagsInput
+                              name='list_data'
+                              placeHolder='Enter a list ID and press enter'
+                              separators={[',', ' ', 'Enter', 'Tab']}
+                              value={getValues().list_data || []}
+                              onChange={(ids: string[]) => {
+                                setValue('list_data', ids, {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                });
+                                trigger('list_data');
+                              }}
+                            />
+                            {errors?.list_data &&
+                              errors?.list_data?.message && (
+                                <span className='error text-red-500  text-sm'>
+                                  {getErrorMessage(errors?.list_data)}
+                                </span>
+                              )}
+                          </div>
+                        )}
+
+                        <div className='mb-1 mt-4'>
+                          {isLoading ? (
+                            <div className='flex items-center gap-2'>
+                              <Button
+                                className='bg-white  font-semibold py-2 px-4  rounded-lg bg-[--ul-bg-primary] text-white'
+                                onPress={() => onCancelExtraction()}
+                              >
+                                Cancel
+                              </Button>
+                              <CircularProgress
+                                aria-label='Loading...'
+                                classNames={{
+                                  svg: 'text-[--ul-bg-primary] w-14 h-14',
+                                }}
+                                showValueLabel={true}
+                                size='lg'
+                                value={extractingPercentage || 0}
+                              />
+                              <span className='text-[--ul-text-primary] font-semibold flex items-center gap-2'>
+                                <span>Extracting Chemicals</span>{' '}
+                                <div className='dot-flashing ml-3 mt-1' />
+                              </span>
+                            </div>
+                          ) : (
+                            <Button
+                              className='bg-white text-xl font-normal rounded-xl bg-[--ul-bg-primary] text-white font-poppins p-4'
+                              disabled={isLoading}
+                              isLoading={isLoading}
+                              type='submit'
+                            >
+                              Extract
+                            </Button>
+                          )}
                         </div>
                       </Form>
                     )}
                   </ReactHookForm>
                 </div>
-                <div className="extraction-data">
-                  {isLoading ? (
-                    <SkeletonLoading />
-                  ) : error ? (
-                    <div className="text-white text-center mt-4 font-medium border border-red-200 bg-red-500/90 rounded-md p-2 mt-2">
+                <div className='extraction-data'>
+                  {error ? (
+                    <div className='text-white text-center mt-4 font-medium border border-red-200 bg-red-500/90 rounded-md p-2 mt-2'>
                       {error}
                     </div>
                   ) : extractionData && Object.keys(extractionData)?.length ? (
-                    <div className="space-y-6 mt-4">
-                      <div className="flex justify-between items-center mt-2">
-                        <h2 className="text-2xl font-bold text-gray-800">
+                    <div className='space-y-6 mt-4'>
+                      <div className='flex justify-between items-center mt-2'>
+                        <h2 className='text-2xl font-bold text-gray-800'>
                           Extracted Chemicals
                         </h2>
                       </div>
-                      {hasListIds ? (
-                        listIds.map((listId: any, index: number) => {
-                          const actual_chemicals =
-                            extractionData?.result?.actual_chemicals[index] ||
-                            [];
-                          const extracted_chemicals =
-                            extractionData?.result?.extracted_chemicals[
-                              index
-                            ] || [];
-                          const actual_chemicals_rr =
-                            extractionData?.result?.actual_chemicals_rr[
-                              index
-                            ] || [];
-                          const extracted_chemicals_rr =
-                            extractionData?.result?.extracted_chemicals_rr[
-                              index
-                            ] || [];
-                          const metrics =
-                            extractionData?.result?.metrics[index] || {};
-                          const metricsRR =
-                            extractionData?.result?.metrics_rr[index] || {};
+                      {extractionData.list_ids &&
+                      extractionData.list_ids.length ? (
+                        extractionData.list_ids.map(
+                          (listId: any, index: number) => {
+                            const actual_chemicals =
+                              (extractionData?.result?.actual_chemicals ||
+                                [])?.[index] || [];
+                            const extracted_chemicals =
+                              (extractionData?.result?.extracted_chemicals ||
+                                [])?.[index] || [];
+                            const actual_chemicals_rr =
+                              (extractionData?.result?.actual_chemicals_rr ||
+                                [])?.[index] || [];
+                            const extracted_chemicals_rr =
+                              (extractionData?.result?.extracted_chemicals_rr ||
+                                [])?.[index] || [];
+                            const metrics =
+                              extractionData?.result?.metrics?.[index] || {};
+                            const metricsRR =
+                              extractionData?.result?.metrics_rr?.[index] || {};
 
-                          return (
-                            <MetricsOverviewV1
-                              key={listId}
-                              actualChemicals={actual_chemicals || []}
-                              actualChemicalsRR={actual_chemicals_rr || []}
-                              extractedChemicals={extracted_chemicals || []}
-                              extractedChemicalsRR={
-                                extracted_chemicals_rr || []
-                              }
-                              listId={listId}
-                              metrics={metrics}
-                              metricsRR={metricsRR}
-                            />
-                          );
-                        })
+                            return (
+                              <>
+                                <MetricsOverviewV1
+                                  key={listId}
+                                  actualChemicals={actual_chemicals || []}
+                                  actualChemicalsRR={actual_chemicals_rr || []}
+                                  extractedChemicals={extracted_chemicals || []}
+                                  extractedChemicalsRR={
+                                    extracted_chemicals_rr || []
+                                  }
+                                  listId={listId}
+                                  metrics={metrics}
+                                  metricsRR={metricsRR}
+                                />
+                              </>
+                            );
+                          }
+                        )
                       ) : (
-                        <ChemicalResultsSection
-                          chemicalCategories={[
-                            {
-                              data: extractedChemicalsList,
-                              title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
-                              color: "text-blue-500",
-                              icon: Circle,
-                              columns: Object.keys(extractedChemicalsList?.[0]),
-                            },
-                          ]}
-                        />
+                        <>
+                          <ChemicalResultsSection
+                            chemicalCategories={[
+                              {
+                                data: extractedChemicalsList,
+                                title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
+                                color: 'text-blue-500',
+                                icon: Circle,
+                                columns: Object.keys(
+                                  extractedChemicalsList?.[0] || {}
+                                ).map((key: string) => {
+                                  return {
+                                    key,
+                                    className: 'text-[--ul-text-primary]',
+                                    label:
+                                      key.charAt(0).toUpperCase() +
+                                      key.slice(1),
+                                    ...((key.toLowerCase() === 'cas' ||
+                                      key.toLowerCase() === 'synonyms') && {
+                                      render: (value: string | string[]) => {
+                                        if (
+                                          !value ||
+                                          (Array.isArray(value) &&
+                                            value.length === 0)
+                                        )
+                                          return '';
+
+                                        const valuesArray = Array.isArray(value)
+                                          ? value
+                                          : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+                                        return (
+                                          <>
+                                            {valuesArray?.map(
+                                              (elem: any): any => (
+                                                <Chip className='mr-2'>
+                                                  {elem}
+                                                </Chip>
+                                              )
+                                            )}
+                                          </>
+                                        );
+                                      },
+                                    }),
+                                  };
+                                }),
+                              },
+                            ]}
+                          />
+                        </>
                       )}
+                      <HtmlRenderer htmlContent='' />
                     </div>
                   ) : (
-                    ""
+                    ''
                   )}
                 </div>
               </>
             ) : null}
-          </>
+          </div>
         ) : null}
 
-        {activeTab === "metrics" ? (
+        {activeTab === 'metrics' ? (
           <>
-            <div className="">
-              <MetricsPanel proccessData={processesData} />
+            <div className=''>
+              {metricsLoading ? (
+                <LoadingSpinner />
+              ) : (
+                <MetricsPanel
+                  proccessData={processesData}
+                  onSelect={(id: string, tab: string) =>
+                    onDocumentChange(id, tab)
+                  }
+                />
+              )}
             </div>
           </>
         ) : null}
 
-        {activeTab === "results" ? (
+        {activeTab === 'results' ? (
           <>
-            <div className="mt-12">
+            <div className='mt-12'>
+              <p className='text-3xl'>Documents</p>
               <Select
-                className="mb-2 mt-3"
+                className='mb-2 mt-3'
                 classNames={{
-                  label: "font-bold text-gray-800",
+                  label:
+                    'font-medium text-gray-800 absolute top-[2px] left-4 bg-white',
+                  trigger:
+                    'shadow-none bg-white  data-[hover=true]:bg-white rounded-md border-gray-500 border-1',
                 }}
-                label="Select  Version"
-                labelPlacement="outside"
-                placeholder="Select Version"
-                size="md"
-                value={selectedVersion}
+                label='Document'
+                labelPlacement='inside'
+                placeholder='Select Document'
+                selectedKeys={selectedVersion}
+                size='md'
                 onChange={(e) => {
-                  setSelectedVersion(e.target.value);
                   if (e.target.value) {
-                    getProcessDataByVersion(e.target.value);
+                    onDocumentChange(e.target.value, activeTab);
                   }
                 }}
               >
-                {versions?.map((version) => (
-                  <SelectItem key={version.value}>{version.label}</SelectItem>
+                {documentList?.map((version) => (
+                  <SelectItem key={version._id}>{version.filename}</SelectItem>
                 ))}
               </Select>
             </div>
 
-            <DocumentDetails />
+            <DocumentDetails
+              isLoading={documentLoading}
+              selected={selectedDocument}
+            />
           </>
         ) : null}
+
+        {/* <ChemicalTable data={mockChemicalData} columns={columns} /> */}
       </div>
     </section>
   );

@@ -15,7 +15,24 @@ function App() {
           path="/chemadvisor/document/:documentId"
         />
       </Routes>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        containerClassName=""
+        containerStyle={{}}
+        toastOptions={{
+          // Define default options
+          className: "",
+          duration: 3000,
+          removeDelay: 1000,
+          style: {
+            background: "#edf7ed",
+            color: "#000",
+          },
+        
+        }}
+        
+      />
     </div>
   );
 }

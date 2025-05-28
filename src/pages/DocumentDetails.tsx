@@ -1,111 +1,80 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 
 import MetricsOverviewV1 from "@/components/Metrics_v1";
 import { SkeletonLoading } from "@/components/SkeletonLoading";
-import { getExtractedData } from "@/services/APIServices";
-// import { ChevronLeft } from "lucide-react";
+import { getProcessesByVersion } from "@/services/APIServices";
 
-const DocumentDetails = () => {
-  const [extractionData, setExtractionData] = useState<any>({});
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+const DocumentDetails = ({ selected, isLoading: initialLoading }: any) => {
+  const [extractionData, setExtractionData] = useState<any>(selected || {});
+  const [isLoading, setIsLoading] = useState<boolean>(initialLoading || false);
   const { documentId } = useParams();
-
-  //   const navigate = useNavigate();
 
   const getDataById = async (id: string) => {
     setIsLoading(true);
-    await getExtractedData(id)
-      .then((res) => {
-        if (res) {
-          if (res.status === 200) {
-            const data = res?.data || {};
-            const extractionData = data || {};
-
-            extractionData._id = extractionData.id;
-            extractionData.filename =
-              extractionData.file_path.split("/").pop() || "";
-            setExtractionData(extractionData);
-            setIsLoading(false);
-          }
+    try {
+      const res = await getProcessesByVersion();
+      if (res?.status === 200) {
+        const data = res.data || [];
+        const matchedDoc = data.find((doc: any) => doc?._id?.$oid === id);
+        if (matchedDoc) {
+          matchedDoc.filename = matchedDoc.filename?.split("/").pop() || "";
+          setExtractionData(matchedDoc);
         } else {
-          console.error("Error ooccurred while fetching the data!");
-          toast.error("Error ooccurred while fetching the data!");
+          toast.error("No matching document found.");
         }
-      })
-      .catch((err) => {
-        setIsLoading(false);
-        toast.error("Error ooccurred while fetching the data!");
-        console.error(err);
-      });
+      } else {
+        toast.error("Failed to fetch data");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred while fetching the data!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    documentId && getDataById(documentId);
+    if (documentId) {
+      getDataById(documentId);
+    }
   }, [documentId]);
 
   return (
-    <div className="container mx-auto py-8 w-full mt-2">
+    <div className="w-full mt-2">
       <div className="mb-2 flex items-center">
         {/* <ChevronLeft className="w-8 h-8 mr-2 cursor-pointer" onClick={() => navigate(-1)} /> */}
-        <p className="text-left  font-bold text-2xl">Extracted Chemicals</p>
       </div>
+
       {isLoading ? (
         <SkeletonLoading />
       ) : (
-        <div className="extraction-data">
-          {isLoading ? (
-            <SkeletonLoading />
-          ) : extractionData && Object.keys(extractionData)?.length ? (
+        <div className="extraction-data w-full">
+          {extractionData && Object.keys(extractionData)?.length ? (
             <div className="space-y-6 mt-4">
               <div className="flex justify-between items-center mt-2">
-                <h2 className="text-xl font-medium text-gray-800">
-                  File Name - {extractionData.filename}
-                </h2>
-                {/* <Button
-                className="bg-white  font-semibold py-2 px-4  rounded-md bg-[#8a1721] text-white"
-                disabled={downloadLoading}
-                isLoading={downloadLoading}
-                startContent={<Download />}
-                onPress={() => {
-                  if (camAdvisorData?._id ) {
-                    downloadFile(camAdvisorData?._id);
-                  }
-                }}
-              >
-                Download
-              </Button> */}
+                <p>
+                  <span className="font-bold">File Name:</span>{" "}
+                  {extractionData.filename}
+                </p>
               </div>
-              {extractionData &&
-                extractionData.list_ids &&
-                extractionData.list_ids.length &&
-                extractionData.list_ids.map((listId: any, index: number) => {
-                  const actual_chemicals =
-                    extractionData?.result?.actual_chemicals[index] || [];
-                  const extracted_chemicals =
-                    extractionData?.result?.extracted_chemicals[index] || [];
-                  const actual_chemicals_rr =
-                    extractionData?.result?.actual_chemicals_rr[index] || [];
-                  const extracted_chemicals_rr =
-                    extractionData?.result?.extracted_chemicals_rr[index] || [];
-                  const metrics = extractionData?.result?.metrics[index] || {};
-                  const metricsRR =
-                    extractionData?.result?.metrics_rr[index] || {};
 
-                  return (
-                    <MetricsOverviewV1
-                      key={listId}
-                      actualChemicals={actual_chemicals || []}
-                      actualChemicalsRR={actual_chemicals_rr || []}
-                      extractedChemicals={extracted_chemicals || []}
-                      extractedChemicalsRR={extracted_chemicals_rr || []}
-                      listId={listId}
-                      metrics={metrics}
-                      metricsRR={metricsRR}
-                    />
-                  );
-                })}
+              {extractionData.list_ids?.map((listId: any, index: number) => {
+                const result = extractionData.result || {};
+                return (
+                  <MetricsOverviewV1
+                    key={listId}
+                    actualChemicals={result.actual_chemicals?.[index] || []}
+                    actualChemicalsRR={result.actual_chemicals_rr?.[index] || []}
+                    extractedChemicals={result.extracted_chemicals?.[index] || []}
+                    extractedChemicalsRR={result.extracted_chemicals_rr?.[index] || []}
+                    listId={listId}
+                    metrics={result.metrics?.[index] || {}}
+                    metricsRR={result.metrics_rr?.[index] || {}}
+                  />
+                );
+              })}
             </div>
           ) : (
             <p className="text-center mx-auto">No Data Found</p>

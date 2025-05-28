@@ -1,6 +1,5 @@
 // src/services/userService.ts
 // import camAdvisorData from "@/data";
-import camAdvisorData from '@/data';
 import { apiClient } from "./ApiClient";
 import axios from "axios";
 
@@ -44,11 +43,37 @@ export const getExtractedData = (id: string) => {
 export const getVersions = () => {
   return apiClient.get<any>(`/api/versions`);
 };
-export const getProcessesByVersion = async (version_id: string) => {
+export const getProcessesByVersion = async () => {
   // return apiClient.get<any>(`/api/process/version/${version_id}`);
-  const {data} = await axios.get("/ChemADVISOR.process_data.json");
+  const { data } = await axios.get("/metrics_jsons/documents.json");
   return data;
   // return { status: 200 }
+};
+export const getDocumentList = async () => {
+  // return apiClient.get<any>(`/api/process/version/${version_id}`);
+  const { data } = await axios.get("/metrics_jsons/documents.json");
+  return data;
+};
+
+export const getAllDocumentData = async () => {
+  const { data: documentsList } = await axios.get("/metrics_jsons/documents.json");
+  const documentFilenames = documentsList.map(
+    (doc: any) => doc._id // Extract filenames from the documents list
+  );
+
+  // Fetch all JSON documents listed in documents.json
+  const documentPromises = documentFilenames.map((filename: string) =>
+    axios.get(`/metrics_jsons/${filename}.json`).then((res) => res.data)
+  );
+
+  const allDocuments = await Promise.all(documentPromises);
+  console.log("All documents fetched:", allDocuments);
+  return {allDocuments, documentsList};
+};
+export const getAllDocumentDataByFilename = async (filename: string) => {
+  // return apiClient.get<any>(`/api/process/version/${version_id}`);
+  const { data } = await axios.get(`/metrics_jsons/${filename}.json`);
+  return data;
 };
 
 // downloadService.ts

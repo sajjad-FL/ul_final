@@ -1,11 +1,7 @@
-import {
-  BarChart2,
-  Circle,
-  SquareCheckBig,
-  ChartColumnStacked,
-} from "lucide-react";
+import { Circle } from 'lucide-react';
+import { Chip } from '@heroui/chip';
 
-import ChemicalResultsSection from "./ChemicalResultsSection";
+import ChemicalResultsSection from './ChemicalResultsSection';
 
 const MetricsOverviewV1 = (props: {
   listId?: string;
@@ -17,7 +13,7 @@ const MetricsOverviewV1 = (props: {
   extractedChemicalsRR?: any[];
 }) => {
   const {
-    listId = "",
+    listId = '',
     extractedChemicals = [],
     actualChemicals = [],
     metrics = {},
@@ -26,64 +22,170 @@ const MetricsOverviewV1 = (props: {
     extractedChemicalsRR = [],
   } = props || {};
 
-  const actualChemicalsCols = Object.keys(actualChemicals?.[0] || {});
-  const actualChemicalsRRCols = Object.keys(actualChemicalsRR?.[0] || {});
-  const extractedChemicalsCols = Object.keys(extractedChemicals?.[0] || {});
-  const extractedChemicalsRRCols = Object.keys(extractedChemicalsRR?.[0] || {});
+  const actualChemicalsCols = Object.keys(actualChemicals?.[0] || {}).map(
+    (key) => {
+      return {
+        key,
+        className: 'text-[--ul-text-primary]',
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        ...((key.toLowerCase() === 'cas' ||
+          key.toLowerCase() === 'synonyms') && {
+          render: (value: string | string[]) => {
+            if (!value || (Array.isArray(value) && value.length === 0))
+              return '';
+
+            const valuesArray = Array.isArray(value)
+              ? value
+              : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+            return (
+              <>
+                {valuesArray?.map((elem: any): any => (
+                  <Chip className='mr-2'>{elem}</Chip>
+                ))}
+              </>
+            );
+          },
+        }),
+      };
+    }
+  );
+  const actualChemicalsRRCols = Object.keys(actualChemicalsRR?.[0] || {}).map(
+    (key) => {
+      return {
+        key,
+        className: 'text-[--ul-text-primary]',
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        ...((key.toLowerCase() === 'cas' ||
+          key.toLowerCase() === 'synonyms') && {
+          render: (value: string | string[]) => {
+            if (!value || (Array.isArray(value) && value.length === 0))
+              return '';
+
+            const valuesArray = Array.isArray(value)
+              ? value
+              : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+            return (
+              <>
+                {valuesArray?.map((elem: any): any => (
+                  <Chip className='mr-2'>{elem}</Chip>
+                ))}
+              </>
+            );
+          },
+        }),
+      };
+    }
+  );
+  const extractedChemicalsCols = Object.keys(extractedChemicals?.[0] || {}).map(
+    (key) => {
+      return {
+        key,
+        className: 'text-[--ul-text-primary]',
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        ...((key.toLowerCase() === 'cas' ||
+          key.toLowerCase() === 'synonyms') && {
+          render: (value: string | string[]) => {
+            if (!value || (Array.isArray(value) && value.length === 0))
+              return '';
+
+            const valuesArray = Array.isArray(value)
+              ? value
+              : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+            return (
+              <>
+                {valuesArray?.map((elem: any): any => (
+                  <Chip className='mr-2'>{elem}</Chip>
+                ))}
+              </>
+            );
+          },
+        }),
+      };
+    }
+  );
+  const extractedChemicalsRRCols = Object.keys(
+    extractedChemicalsRR?.[0] || {}
+  ).map((key) => {
+    return {
+      key,
+      className: 'text-[--ul-text-primary]',
+      label: key.charAt(0).toUpperCase() + key.slice(1),
+      ...((key.toLowerCase() === 'cas' || key.toLowerCase() === 'synonyms') && {
+        render: (value: string | string[]) => {
+          if (!value || (Array.isArray(value) && value.length === 0)) return '';
+
+          const valuesArray = Array.isArray(value)
+            ? value
+            : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+          return (
+            <>
+              {valuesArray?.map((elem: any): any => (
+                <Chip className='mr-2'>{elem}</Chip>
+              ))}
+            </>
+          );
+        },
+      }),
+    };
+  });
 
   return (
-    <div>
-      <div className="rounded-md">
-        <h2 className="text-lg font-bold flex items-center gap-2 mb-6 text-gray-800">
-          <BarChart2 className="text-purple-500" size={20} />
-          List Id: {listId}
+    <div className='w-full'>
+      <div className='rounded-md'>
+        <h2 className='text-lg flex items-center gap-2 mb-6 text-gray-800'>
+          {/* <BarChart2 className="text-purple-500" size={20} /> */}
+          <span className='font-bold'>List ID:</span> {listId}
         </h2>
       </div>
-      <div className="mt-2">
-        <div className="mt-2 mb-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800 border rounded-md p-4 mt-1">
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <SquareCheckBig className="text-green-500 mr-2" size={18} />
-                <span className="text-sm font-medium">Cas Precision</span>
+      <div className='mt-2'>
+        <div className='mt-2 mb-2'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800   mt-1'>
+            <div className='flex flex-col border p-4 shadow-sm rounded-md'>
+              <div className='flex items-center mb-2'>
+                {/* <SquareCheckBig className="text-green-500 mr-2" size={18} /> */}
+                <span className='text-md font-normal'>CAS Precision</span>
               </div>
-              <span className="text-2xl font-bold">
+              <span className='text-4xl font-bold mt-6'>
                 {((metrics?.CAS?.precision || 0) * 100).toFixed(2) || 0} %
               </span>
             </div>
 
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <ChartColumnStacked className="text-blue-500 mr-2" size={18} />
-                <span className="text-sm font-medium">Cas Recall</span>
+            <div className='flex flex-col border p-4 shadow-sm rounded-md'>
+              <div className='flex items-center mb-2'>
+                {/* <ChartColumnStacked className="text-blue-500 mr-2" size={18} /> */}
+                <span className='text-md font-normal'>CAS Recall</span>
               </div>
-              <span className="text-2xl font-bold">
+              <span className='text-4xl font-bold mt-6'>
                 {((metrics?.CAS?.recall || 0) * 100).toFixed(2) || 0}%
               </span>
             </div>
           </div>
         </div>
-        <div className="flex justify-between">
-          <div className="w-[49%] mt-2">
+        <div className='flex justify-between'>
+          <div className='w-[49%] mt-2'>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
                   data: extractedChemicals,
                   title: `Cas Extracted Chemicals (${extractedChemicals?.length || 0})`,
-                  color: "text-blue-500",
+                  color: 'text-blue-500',
                   icon: Circle,
                   columns: extractedChemicalsCols,
                 },
               ]}
             />
           </div>
-          <div className="w-[49%] mt-2">
+          <div className='w-[49%] mt-2'>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
                   data: actualChemicals,
                   title: `Cas Actual Chemicals (${actualChemicals?.length || 0})`,
-                  color: "text-orange-500",
+                  color: 'text-orange-500',
                   icon: Circle,
                   columns: actualChemicalsCols,
                 },
@@ -93,43 +195,40 @@ const MetricsOverviewV1 = (props: {
         </div>
       </div>
 
-      <div className="mt-2">
-        <div className="mt-2 mb-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800 border rounded-md p-4 mt-1">
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <SquareCheckBig className="text-green-500 mr-2" size={18} />
-                <span className="text-sm font-medium">RR Precision</span>
+      <div className='mt-2'>
+        <div className='mt-2 mb-2'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800 p-4 mt-1'>
+            <div className='flex flex-col border p-4 shadow-sm rounded-md'>
+              <div className='flex items-center mb-2'>
+                {/* <SquareCheckBig className="text-green-500 mr-2" size={18} /> */}
+                <span className='text-md font-normal'>RR Precision</span>
               </div>
-              <span className="text-2xl font-bold">
+              <span className='text-4xl font-bold mt-6'>
                 {((metricsRR?.CAS?.precision || 0) * 100).toFixed(2) || 0} %
               </span>
             </div>
 
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <ChartColumnStacked className="text-blue-500 mr-2" size={18} />
-                <span className="text-sm font-medium">RR Recall</span>
+            <div className='flex flex-col border p-4 shadow-sm rounded-md'>
+              <div className='flex items-center mb-2'>
+                {/* <ChartColumnStacked className="text-blue-500 mr-2" size={18} /> */}
+                <span className='text-md font-normal'>RR Recall</span>
               </div>
-              <span className="text-2xl font-bold">
+              <span className='text-4xl font-bold mt-6'>
                 {((metricsRR?.CAS?.recall || 0) * 100).toFixed(2) || 0}%
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-between mt-2">
+        <div className='flex justify-between mt-2'>
           {/* RR Extracted Chemicals */}
-          <div className="mb-4 w-[49%] mt-2">
-            <h4 className="text-lg font-semibold mb-2">
-              RR Extracted Chemicals
-            </h4>
+          <div className='mb-4 w-[49%] mt-2'>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
                   data: extractedChemicalsRR,
                   title: `RR Extracted Chemicals (${extractedChemicalsRR?.length || 0})`,
-                  color: "text-blue-500",
+                  color: 'text-blue-500',
                   icon: Circle,
                   columns: extractedChemicalsRRCols,
                 },
@@ -138,14 +237,13 @@ const MetricsOverviewV1 = (props: {
           </div>
 
           {/* RR Actual Chemicals */}
-          <div className="mb-4 w-[49%] mt-2">
-            <h4 className="text-lg font-semibold mb-2">RR Actual Chemicals</h4>
+          <div className='mb-4 w-[49%] mt-2'>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
                   data: actualChemicalsRR,
                   title: `RR Actual Chemicals (${actualChemicalsRR?.length || 0})`,
-                  color: "text-orange-500",
+                  color: 'text-orange-500',
                   icon: Circle,
                   columns: actualChemicalsRRCols,
                 },
