@@ -32,6 +32,8 @@ const ChemicalTable: React.FC<ChemicalTableProps> = ({
     return data;
   }, [data]);
 
+  console.log(data)
+
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   const currentData = useMemo(() => {
@@ -53,10 +55,7 @@ const ChemicalTable: React.FC<ChemicalTableProps> = ({
     setCurrentPage(page);
   };
 
-  const handleFileNameClick = (col: any, id: any): any => {
-    if (col?.key !== 'filename') return;
-    navigate(`/chemadvisor/document/${id}`)
-  };
+
 
   return (
     <div className="w-full space-y-4">
@@ -92,7 +91,7 @@ const ChemicalTable: React.FC<ChemicalTableProps> = ({
                         <td
                           key={col.key}
                           className={`px-4 py-3 text-sm text-gray-700 ${col.cellClassName || ""}`}
-                          onClick={() => handleFileNameClick(col, item?._id )}
+                        
                         >
                           {col.render
                             ? col.render(item[col.key], item)

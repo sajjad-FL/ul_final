@@ -4,7 +4,7 @@ import axios from "axios";
 const axiosInstance = axios.create({
   baseURL:
     // "https://ul-ai-chemadvisor-backend.salmonglacier-36421fc2.eastus2.azurecontainerapps.io/",
-    "http://172.203.242.247:8005/",
+    "http://172.203.242.247:8006/",
   timeout: 4800000,
   headers: {
     "Content-Type": "application/json",

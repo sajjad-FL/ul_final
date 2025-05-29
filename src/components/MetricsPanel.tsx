@@ -1,4 +1,3 @@
-import metricsData from '@/data/metricsData';
 import ChemicalTable from "./ChemicalTable";
 import {
   Table,
@@ -8,25 +7,43 @@ import {
   TableHeader,
   TableRow,
 } from "./Table";
+import moment from "moment";
 
 // Interface for CAS metrics data
 
 const MetricsPanel = ({ proccessData }: any) => {
-  console.log("MetricsPanel proccessData:", {proccessData})
-  const processData = metricsData;
-  const { overall_metrics = {}, with_list = [] } = processData || {}
-    console.log({ processData, overall_metrics });
-    const metricsColumns: any[] = [
+  const { overallMetrics = {}, withIds = [] }: any = proccessData || {};
+  const metricsColumns: any[] = [
     {
       key: "filename",
       label: "File Name",
       className: "text-[--ul-text-primary]",
+      render: (value: any, item: any) => {
+        return (
+          <div
+            className="cursor-pointer"
+            onClick={() =>
+              window.open(`/chemadvisor/document/${item._id}`, "_blank")
+            }
+          >
+            {value}
+          </div>
+        );
+      },
     },
     // {
     //   key: "list_length",
     //   label: "List Length",
     //   className: "text-[--ul-text-primary]",
     // },
+    {
+      key: "processed_at",
+      label: "Processed At",
+      className: "text-[--ul-text-primary]",
+      render: (value: any) => {
+        return moment(value).format("DD-MM-YYYY HH:mm:ss");
+      },
+    },
     {
       key: "list_id",
       label: "List ID",
@@ -36,11 +53,17 @@ const MetricsPanel = ({ proccessData }: any) => {
       key: "precision",
       label: "Precision",
       className: "text-[--ul-text-primary]",
+      render: (value: any) => {
+        return value + "%";
+      },
     },
     {
       key: "recall",
       label: "Recall",
       className: "text-[--ul-text-primary]",
+      render: (value: any) => {
+        return value + "%";
+      },
     },
     {
       key: "extracted_chemicals",
@@ -105,32 +128,37 @@ const MetricsPanel = ({ proccessData }: any) => {
             <TableBody>
               <TableRow>
                 <TableCell className="text-center">
-                  {overall_metrics?.precision || 0}
+                  {overallMetrics?.precision || 0}%
                 </TableCell>
                 <TableCell className="text-center">
-                  {overall_metrics?.recall || 0}
+                  {overallMetrics?.recall || 0}%
                 </TableCell>
                 <TableCell className="text-center">
-                  {overall_metrics?.extracted || 0}
+                  {overallMetrics?.extracted || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {overall_metrics?.actual || 0}
+                  {overallMetrics?.actual || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {overall_metrics?.matched || 0}
+                  {overallMetrics?.matched || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {overall_metrics?.missed || 0}
+                  {overallMetrics?.missed || 0}
                 </TableCell>
                 <TableCell className="text-center">
-                  {overall_metrics?.extra || 0}
+                  {overallMetrics?.extra || 0}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
         <div className="rounded-md border overflow-hidden">
-          <ChemicalTable isMetrics={true} columns={metricsColumns} data ={with_list || [] } className="!h-[600px]"/>
+          <ChemicalTable
+            isMetrics={true}
+            columns={metricsColumns}
+            data={withIds || []}
+            className="!h-[600px]"
+          />
           {/* <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
@@ -268,7 +296,7 @@ const MetricsPanel = ({ proccessData }: any) => {
           </Table>
         </div> */}
         {/* <div className="rounded-md border overflow-hidden">
-          <ChemicalTable columns={metricsColumns} data ={proccessData?.overall_metrics_rr||[]} className="!h-[600px]"/>
+          <ChemicalTable columns={metricsColumns} data ={proccessData?.overallMetrics_rr||[]} className="!h-[600px]"/>
           {/* <Table className="w-full">
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">

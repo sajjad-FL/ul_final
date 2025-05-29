@@ -40,6 +40,9 @@ export const uploadText = (
 export const getExtractedData = (id: string) => {
   return apiClient.get<any>(`/api/process/${id}`);
 };
+export const getResultData = (id: string) => {
+  return apiClient.get<any>(`/results/${id}`);
+};
 export const getVersions = () => {
   return apiClient.get<any>(`/api/versions`);
 };
@@ -53,6 +56,10 @@ export const getDocumentList = async () => {
   // return apiClient.get<any>(`/api/process/version/${version_id}`);
   const { data } = await axios.get("/metrics_jsons/documents.json");
   return data;
+};
+export const getAllDocument = async () => {
+  return apiClient.get<any>(`/metrics`);
+ 
 };
 
 export const getAllDocumentData = async () => {
