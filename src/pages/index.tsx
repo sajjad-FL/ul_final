@@ -546,38 +546,36 @@ const Chemadvisor = () => {
                               extractionData.list_ids?.map(
                                 (listId: any, index: number) => {
                                   const actual_chemicals =
-                                    (extractionData?.result?.actual_chemicals ||
-                                      [])?.[index] || [];
+                                   (extractionData?.result?.results || [])[index]?.actual_chemicals || [];;
                                   const extracted_chemicals =
-                                    (extractionData?.result?.extracted_chemicals ||
-                                      [])?.[index] || [];
-                                  const actual_chemicals_rr =
-                                    (extractionData?.result?.actual_chemicals_rr ||
-                                      [])?.[index] || [];
-                                  const extracted_chemicals_rr =
-                                    (extractionData?.result?.extracted_chemicals_rr ||
-                                      [])?.[index] || [];
-                                  const metrics =
-                                    extractionData?.result?.metrics?.[index] || {};
+                                    (extractionData?.result?.results || [])[index]?.extracted_chemicals || [];
+                                  // const actual_chemicals_rr =
+                                  //   (extractionData?.result?.actual_chemicals_rr ||
+                                  //     [])?.[index] || [];
+                                  // const extracted_chemicals_rr =
+                                  //   (extractionData?.result?.extracted_chemicals_rr ||
+                                  //     [])?.[index] || [];
+                                  const precision =
+                                    extractionData?.result?.results?.[index]?.precision || '';
+                                  const recall =
+                                    extractionData?.result?.results?.[index]?.recall || '';
+                                    console.log({precision, recall})
                                   const metricsRR =
                                     extractionData?.result?.metrics_rr?.[index] || {};
-
+                                  console.log({extractionData})
                                   return (
                                     <>
                                       <MetricsOverviewV1
                                         key={listId}
                                         actualChemicals={actual_chemicals}
-                                        actualChemicalsRR={actual_chemicals_rr}
                                         extractedChemicals={extracted_chemicals}
-                                        extractedChemicalsRR={extracted_chemicals_rr}
                                         listId={listId}
-                                        metrics={metrics}
+                                        // metrics={metrics}
+                                        precision={precision}
+                                        recall={recall}
                                         metricsRR={metricsRR}
                                       />
-
-
-
-                                      <div className="text-medium">
+                                      {/* <div className="text-medium">
                                         <p className="font-bold text-lg mb-2 mb-2">Highlighted Text</p>
 
                                         {extractionData?.result?.highlight_text && (
@@ -588,7 +586,7 @@ const Chemadvisor = () => {
                                             }}
                                           />
                                         )}
-                                      </div>
+                                      </div> */}
                                     </>
                                   );
                                 }
@@ -815,36 +813,46 @@ const Chemadvisor = () => {
                               extractionData.list_ids.length ? (
                               extractionData.list_ids.map(
                                 (listId: any, index: number) => {
-                                  const actual_chemicals =
-                                    (extractionData?.result?.actual_chemicals ||
-                                      [])?.[index] || [];
-                                  const extracted_chemicals =
-                                    (extractionData?.result?.extracted_chemicals ||
-                                      [])?.[index] || [];
+                                  // const actual_chemicals =
+                                  //   (extractionData?.result?.actual_chemicals ||
+                                  //     [])?.[index] || [];
+                                  // const extracted_chemicals =
+                                  //   (extractionData?.result?.extracted_chemicals ||
+                                  //     [])?.[index] || [];
                                   const actual_chemicals_rr =
                                     (extractionData?.result?.actual_chemicals_rr ||
                                       [])?.[index] || [];
                                   const extracted_chemicals_rr =
                                     (extractionData?.result?.extracted_chemicals_rr ||
                                       [])?.[index] || [];
-                                  const metrics =
-                                    extractionData?.result?.metrics?.[index] || {};
-                                  const metricsRR =
-                                    extractionData?.result?.metrics_rr?.[index] || {};
-
+                                      const actual_chemicals =
+                                   (extractionData?.result?.results || [])[index]?.actual_chemicals || [];;
+                                  const extracted_chemicals =
+                                    (extractionData?.result?.results || [])[index]?.extracted_chemicals || [];
+                                  // const metrics =
+                                  //   extractionData?.result?.metrics?.[index] || {};
+                                  // const metricsRR =
+                                  //   extractionData?.result?.metrics_rr?.[index] || {};
+                                  const precision =
+                                    extractionData?.result?.results?.[index]?.precision || '';
+                                  const recall =
+                                    extractionData?.result?.results?.[index]?.recall || '';
+                                    console.log({precision, recall})
                                   return (
                                     <>
                                       <MetricsOverviewV1
                                         key={listId}
                                         actualChemicals={actual_chemicals || []}
-                                        actualChemicalsRR={actual_chemicals_rr || []}
+                                        // actualChemicalsRR={actual_chemicals_rr || []}
                                         extractedChemicals={extracted_chemicals || []}
-                                        extractedChemicalsRR={
-                                          extracted_chemicals_rr || []
-                                        }
+                                        // extractedChemicalsRR={
+                                        //   extracted_chemicals_rr || []
+                                        // }
                                         listId={listId}
-                                        metrics={metrics}
-                                        metricsRR={metricsRR}
+                                        precision={precision}
+                                        recall={recall}
+                                        // metrics={metrics}
+                                        // metricsRR={metricsRR}
                                       />
                                     </>
                                   );

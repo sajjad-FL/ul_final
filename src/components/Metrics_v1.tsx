@@ -11,6 +11,8 @@ const MetricsOverviewV1 = (props: {
   metricsRR?: any;
   actualChemicalsRR?: any[];
   extractedChemicalsRR?: any[];
+  precision: any;
+  recall: any;
 }) => {
   const {
     listId = '',
@@ -20,6 +22,8 @@ const MetricsOverviewV1 = (props: {
     metricsRR = {},
     actualChemicalsRR = [],
     extractedChemicalsRR = [],
+    precision = 0,
+    recall = 0,
   } = props || {};
 
   const actualChemicalsCols = Object.keys(actualChemicals?.[0] || {}).map(
@@ -150,7 +154,7 @@ const MetricsOverviewV1 = (props: {
                 <span className='text-md font-normal'>CAS Precision</span>
               </div>
               <span className='text-4xl font-bold mt-6'>
-                {((metrics?.CAS?.precision || 0) * 100).toFixed(2) || 0} %
+                {((precision || 0)).toFixed(2) || 0} %
               </span>
             </div>
 
@@ -160,7 +164,7 @@ const MetricsOverviewV1 = (props: {
                 <span className='text-md font-normal'>CAS Recall</span>
               </div>
               <span className='text-4xl font-bold mt-6'>
-                {((metrics?.CAS?.recall || 0) * 100).toFixed(2) || 0}%
+                {((recall || 0)).toFixed(2) || 0}%
               </span>
             </div>
           </div>
@@ -171,7 +175,7 @@ const MetricsOverviewV1 = (props: {
               chemicalCategories={[
                 {
                   data: extractedChemicals,
-                  title: `Cas Extracted Chemicals (${extractedChemicals?.length || 0})`,
+                  title: `Extracted Chemicals (${extractedChemicals?.length || 0})`,
                   color: 'text-blue-500',
                   icon: Circle,
                   columns: extractedChemicalsCols,
@@ -184,7 +188,7 @@ const MetricsOverviewV1 = (props: {
               chemicalCategories={[
                 {
                   data: actualChemicals,
-                  title: `Cas Actual Chemicals (${actualChemicals?.length || 0})`,
+                  title: `Actual Chemicals (${actualChemicals?.length || 0})`,
                   color: 'text-orange-500',
                   icon: Circle,
                   columns: actualChemicalsCols,
@@ -196,33 +200,33 @@ const MetricsOverviewV1 = (props: {
       </div>
 
       <div className='mt-2'>
-        <div className='mt-2 mb-2'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800 p-4 mt-1'>
+        {/* <div className='mt-2 mb-2'> */}
+          {/* <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800 p-4 mt-1'>
             <div className='flex flex-col border p-4 shadow-sm rounded-md'>
-              <div className='flex items-center mb-2'>
+              <div className='flex items-center mb-2'> */}
                 {/* <SquareCheckBig className="text-green-500 mr-2" size={18} /> */}
-                <span className='text-md font-normal'>RR Precision</span>
+                {/* <span className='text-md font-normal'>RR Precision</span>
               </div>
               <span className='text-4xl font-bold mt-6'>
                 {((metricsRR?.CAS?.precision || 0) * 100).toFixed(2) || 0} %
               </span>
-            </div>
+            </div> */}
 
-            <div className='flex flex-col border p-4 shadow-sm rounded-md'>
+            {/* <div className='flex flex-col border p-4 shadow-sm rounded-md'>
               <div className='flex items-center mb-2'>
                 {/* <ChartColumnStacked className="text-blue-500 mr-2" size={18} /> */}
-                <span className='text-md font-normal'>RR Recall</span>
+                {/* <span className='text-md font-normal'>RR Recall</span>
               </div>
               <span className='text-4xl font-bold mt-6'>
                 {((metricsRR?.CAS?.recall || 0) * 100).toFixed(2) || 0}%
-              </span>
-            </div>
-          </div>
-        </div>
+              </span> */}
+            {/* </div> */}
+          {/* </div> */}
+        {/* </div> */}
 
-        <div className='flex justify-between mt-2'>
+        {/* <div className='flex justify-between mt-2'> */}
           {/* RR Extracted Chemicals */}
-          <div className='mb-4 w-[49%] mt-2'>
+          {/* <div className='mb-4 w-[49%] mt-2'>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
@@ -234,10 +238,10 @@ const MetricsOverviewV1 = (props: {
                 },
               ]}
             />
-          </div>
+          </div> */}
 
           {/* RR Actual Chemicals */}
-          <div className='mb-4 w-[49%] mt-2'>
+          {/* <div className='mb-4 w-[49%] mt-2'>
             <ChemicalResultsSection
               chemicalCategories={[
                 {
@@ -249,8 +253,8 @@ const MetricsOverviewV1 = (props: {
                 },
               ]}
             />
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
     </div>
   );
