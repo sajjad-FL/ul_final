@@ -40,6 +40,7 @@ const Chemadvisor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<any>(null);
   const [homeActiveTab, setHomeActiveTab] = useState<any>(null);
+  const [dataActiveTab, setDataActiveTab] = useState<any>(null);
   const [extractionData, setExtractionData] = useState<any>({});
   // const [extractionMetricsData] = useState<any>([]);
   const [error, setError] = useState<string | null>(null);
@@ -156,6 +157,7 @@ const Chemadvisor = () => {
           setExtractionData(textExtractionData);
           toast.success("Chemical Extraction Completed!");
           setIsLoading(false);
+          getMetricsVersionData();
         }
       } else {
         throw new Error("Unexpected response from server.");
@@ -184,6 +186,7 @@ const Chemadvisor = () => {
             if (data.status === "completed") {
               const extractionData = data || {};
 
+              getMetricsVersionData();
               extractionData._id = extractionData.id;
               setExtractionData(extractionData);
               setIsLoading(false);
@@ -234,12 +237,9 @@ const Chemadvisor = () => {
     const overallMetrics = data?.overall_metrics || {};
     const withIds = data?.with_list || [];
     const withoutIds = data?.overall_metrics || {};
-    
-
     setProcessesData({
       overallMetrics,withIds,withoutIds
     })
-
     // Helper function
    
     setMetricsLoading(false);
@@ -298,6 +298,25 @@ const Chemadvisor = () => {
     },
   ];
 
+
+   const dataTabs = [
+    {
+      label: "Chemical Extraction",
+      value: "chemical_extraction",
+      onClick: () => {
+        // clearData();
+        // clearFileUploadData();
+      },
+      isFirst: true,
+    },
+    {
+      label: "Text Highlight",
+      value: "text_highlight",
+      // onClick: () => clearData(),
+      isLast: true,
+    },
+  ];
+
   const extractedChemicalsList =
     extractionData?.result?.extracted_chemicals || [];
 
@@ -337,7 +356,7 @@ const Chemadvisor = () => {
           tabs={containerTabs}
           onChange={(tab: string) => {
             setActiveTab(tab);
-            setExtractionData({});
+            // setExtractionData({});
           }}
         />
 
@@ -350,7 +369,7 @@ const Chemadvisor = () => {
               tabs={homeTabs}
               onChange={(tab: string) => {
                 setHomeActiveTab(tab);
-                setExtractionData({});
+                // setExtractionData({});
               }}
             />
 
@@ -496,135 +515,151 @@ const Chemadvisor = () => {
                   }}
                 </ReactHookForm>
 
-                <div className="extraction-data">
+               <div className="extraction-data">
                   {error ? (
                     <div className="text-white text-center mt-4 font-medium border border-red-200 bg-red-500/90 rounded-md p-2 mt-2">
                       {error}
                     </div>
                   ) : extractionData && Object.keys(extractionData)?.length ? (
-                    <div className="space-y-6 mt-4">
-                      <div className="flex justify-between items-center mt-2">
-                        <h2 className="text-2xl font-bold text-gray-800">
-                          Extracted Chemicals
-                        </h2>
-                      </div>
-                      {extractionData.list_ids &&
-                      extractionData.list_ids.length ? (
-                        extractionData.list_ids?.map(
-                          (listId: any, index: number) => {
-                            const actual_chemicals =
-                              (extractionData?.result?.actual_chemicals ||
-                                [])?.[index] || [];
-                            const extracted_chemicals =
-                              (extractionData?.result?.extracted_chemicals ||
-                                [])?.[index] || [];
-                            const actual_chemicals_rr =
-                              (extractionData?.result?.actual_chemicals_rr ||
-                                [])?.[index] || [];
-                            const extracted_chemicals_rr =
-                              (extractionData?.result?.extracted_chemicals_rr ||
-                                [])?.[index] || [];
-                            const metrics =
-                              extractionData?.result?.metrics?.[index] || {};
-                            const metricsRR =
-                              extractionData?.result?.metrics_rr?.[index] || {};
-
-                            return (
-                              <>
-                                <MetricsOverviewV1
-                                  key={listId}
-                                  actualChemicals={actual_chemicals}
-                                  actualChemicalsRR={actual_chemicals_rr}
-                                  extractedChemicals={extracted_chemicals}
-                                  extractedChemicalsRR={extracted_chemicals_rr}
-                                  listId={listId}
-                                  metrics={metrics}
-                                  metricsRR={metricsRR}
-                                />
-                               
-
-                               
-                                <div className="text-medium">
-                         <p className="font-bold text-lg mb-2 mb-2">Highlighted Text</p>
-                               
-                                {extractionData?.result?.highlight_text && (
-                                  <div
-                                    dangerouslySetInnerHTML={{
-                                      __html:
-                                        extractionData?.result?.highlight_text,
-                                    }}
-                                  />
-                                )}
-                                </div>
-                              </>
-                            );
-                          }
-                        )
-                      ) : (
-                        <>
-                          <ChemicalResultsSection
-                            chemicalCategories={[
-                              {
-                                data: extractedChemicalsList,
-                                title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
-                                color: "text-blue-500",
-                                icon: Circle,
-                                columns: Object.keys(
-                                  extractedChemicalsList?.[0] || {}
-                                ).map((key: string) => {
-                                  return {
-                                    key,
-                                    className: "text-[--ul-text-primary]",
-                                    label:
-                                      key.charAt(0).toUpperCase() +
-                                      key.slice(1),
-                                    ...((key.toLowerCase() === "cas" ||
-                                      key.toLowerCase() === "synonyms") && {
-                                      render: (value: string | string[]) => {
-                                        if (
-                                          !value ||
-                                          (Array.isArray(value) &&
-                                            value.length === 0)
-                                        )
-                                          return "";
-
-                                        const valuesArray = Array.isArray(value)
-                                          ? value
-                                          : value.split(/,\s*/).filter(Boolean); // split string into array if needed
-
-                                        return (
-                                          <>
-                                            {valuesArray?.map(
-                                              (elem: any): any => (
-                                                <Chip className="mr-2">
-                                                  {elem}
-                                                </Chip>
-                                              )
-                                            )}
-                                          </>
-                                        );
-                                      },
-                                    }),
-                                  };
-                                }),
-                              },
-                            ]}
+                      <>
+                        <div className="my-[30px]">
+                          <TabNavigation
+                            activeTab={dataActiveTab || dataTabs?.[0]?.value}
+                            customClass={"mt-3"}
+                            innerTabs={true}
+                            tabs={dataTabs}
+                            onChange={(tab: string) => {
+                              setDataActiveTab(tab);
+                              // setExtractionData({});
+                            }}
                           />
-                          <div className="text-medium">
-                         <p className="font-bold text-lg mb-2">Highlighted Text</p>
-                               
-                                {extractionData?.result?.highlight_text && (
-                                  <div
-                                    dangerouslySetInnerHTML={{
-                                      __html:
-                                        extractionData?.result?.highlight_text,
-                                    }}
-                                  />
-                                )}
-                                </div>
-                        </>
-                      )}
-                    </div>
+                        </div>
+                        {
+                          dataActiveTab === null || dataActiveTab === 'chemical_extraction' ? <div className="space-y-6 mt-4">
+                            <div className="flex justify-between items-center mt-2">
+                              <h2 className="text-2xl font-bold text-gray-800">
+                                Extracted Chemicals
+                              </h2>
+                            </div>
+                            {extractionData.list_ids &&
+                              extractionData.list_ids.length ? (
+                              extractionData.list_ids?.map(
+                                (listId: any, index: number) => {
+                                  const actual_chemicals =
+                                    (extractionData?.result?.actual_chemicals ||
+                                      [])?.[index] || [];
+                                  const extracted_chemicals =
+                                    (extractionData?.result?.extracted_chemicals ||
+                                      [])?.[index] || [];
+                                  const actual_chemicals_rr =
+                                    (extractionData?.result?.actual_chemicals_rr ||
+                                      [])?.[index] || [];
+                                  const extracted_chemicals_rr =
+                                    (extractionData?.result?.extracted_chemicals_rr ||
+                                      [])?.[index] || [];
+                                  const metrics =
+                                    extractionData?.result?.metrics?.[index] || {};
+                                  const metricsRR =
+                                    extractionData?.result?.metrics_rr?.[index] || {};
+
+                                  return (
+                                    <>
+                                      <MetricsOverviewV1
+                                        key={listId}
+                                        actualChemicals={actual_chemicals}
+                                        actualChemicalsRR={actual_chemicals_rr}
+                                        extractedChemicals={extracted_chemicals}
+                                        extractedChemicalsRR={extracted_chemicals_rr}
+                                        listId={listId}
+                                        metrics={metrics}
+                                        metricsRR={metricsRR}
+                                      />
+
+
+
+                                      <div className="text-medium">
+                                        <p className="font-bold text-lg mb-2 mb-2">Highlighted Text</p>
+
+                                        {extractionData?.result?.highlight_text && (
+                                          <div
+                                            dangerouslySetInnerHTML={{
+                                              __html:
+                                                extractionData?.result?.highlight_text,
+                                            }}
+                                          />
+                                        )}
+                                      </div>
+                                    </>
+                                  );
+                                }
+                              )
+                            ) : (
+                              <>
+                                <ChemicalResultsSection
+                                  chemicalCategories={[
+                                    {
+                                      data: extractedChemicalsList,
+                                      title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
+                                      color: "text-blue-500",
+                                      icon: Circle,
+                                      columns: Object.keys(
+                                        extractedChemicalsList?.[0] || {}
+                                      ).map((key: string) => {
+                                        return {
+                                          key,
+                                          className: "text-[--ul-text-primary]",
+                                          label:
+                                            key.charAt(0).toUpperCase() +
+                                            key.slice(1),
+                                          ...((key.toLowerCase() === "cas" ||
+                                            key.toLowerCase() === "synonyms") && {
+                                            render: (value: string | string[]) => {
+                                              if (
+                                                !value ||
+                                                (Array.isArray(value) &&
+                                                  value.length === 0)
+                                              )
+                                                return "";
+
+                                              const valuesArray = Array.isArray(value)
+                                                ? value
+                                                : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+                                              return (
+                                                <>
+                                                  {valuesArray?.map(
+                                                    (elem: any): any => (
+                                                      <Chip className="mr-2">
+                                                        {elem}
+                                                      </Chip>
+                                                    )
+                                                  )}
+                                                </>
+                                              );
+                                            },
+                                          }),
+                                        };
+                                      }),
+                                    },
+                                  ]}
+                                />
+                              </>
+                            )}
+                          </div> : <div className="text-medium">
+                            <p className="font-bold text-lg mb-2">Highlighted Text</p>
+
+                            {extractionData?.result?.highlight_text && (
+                              <div
+                                dangerouslySetInnerHTML={{
+                                  __html:
+                                    extractionData?.result?.highlight_text,
+                                }}
+                              />
+                            )}
+                          </div>
+                        }
+
+                      </>
                   ) : (
                     ""
                   )}
@@ -756,116 +791,131 @@ const Chemadvisor = () => {
                       {error}
                     </div>
                   ) : extractionData && Object.keys(extractionData)?.length ? (
-                    <div className="space-y-6 mt-4">
-                      <div className="flex justify-between items-center mt-2">
-                        <h2 className="text-2xl font-bold text-gray-800">
-                          Extracted Chemicals
-                        </h2>
-                      </div>
-                      {extractionData.list_ids &&
-                      extractionData.list_ids.length ? (
-                        extractionData.list_ids.map(
-                          (listId: any, index: number) => {
-                            const actual_chemicals =
-                              (extractionData?.result?.actual_chemicals ||
-                                [])?.[index] || [];
-                            const extracted_chemicals =
-                              (extractionData?.result?.extracted_chemicals ||
-                                [])?.[index] || [];
-                            const actual_chemicals_rr =
-                              (extractionData?.result?.actual_chemicals_rr ||
-                                [])?.[index] || [];
-                            const extracted_chemicals_rr =
-                              (extractionData?.result?.extracted_chemicals_rr ||
-                                [])?.[index] || [];
-                            const metrics =
-                              extractionData?.result?.metrics?.[index] || {};
-                            const metricsRR =
-                              extractionData?.result?.metrics_rr?.[index] || {};
+                      <>
+                        <div className="my-[30px]">
+                          <TabNavigation
+                            activeTab={dataActiveTab || dataTabs?.[0]?.value}
+                            customClass={"mt-3"}
+                            innerTabs={true}
+                            tabs={dataTabs}
+                            onChange={(tab: string) => {
+                              setDataActiveTab(tab);
+                              // setExtractionData({});
+                            }}
+                          />
+                        </div>
+                        {dataActiveTab === null || dataActiveTab === 'chemical_extraction' ?
+                          <div className="space-y-6 mt-4">
+                            <div className="flex justify-between items-center mt-2">
+                              <h2 className="text-2xl font-bold text-gray-800">
+                                Extracted Chemicals
+                              </h2>
+                            </div>
+                            {extractionData.list_ids &&
+                              extractionData.list_ids.length ? (
+                              extractionData.list_ids.map(
+                                (listId: any, index: number) => {
+                                  const actual_chemicals =
+                                    (extractionData?.result?.actual_chemicals ||
+                                      [])?.[index] || [];
+                                  const extracted_chemicals =
+                                    (extractionData?.result?.extracted_chemicals ||
+                                      [])?.[index] || [];
+                                  const actual_chemicals_rr =
+                                    (extractionData?.result?.actual_chemicals_rr ||
+                                      [])?.[index] || [];
+                                  const extracted_chemicals_rr =
+                                    (extractionData?.result?.extracted_chemicals_rr ||
+                                      [])?.[index] || [];
+                                  const metrics =
+                                    extractionData?.result?.metrics?.[index] || {};
+                                  const metricsRR =
+                                    extractionData?.result?.metrics_rr?.[index] || {};
 
-                            return (
+                                  return (
+                                    <>
+                                      <MetricsOverviewV1
+                                        key={listId}
+                                        actualChemicals={actual_chemicals || []}
+                                        actualChemicalsRR={actual_chemicals_rr || []}
+                                        extractedChemicals={extracted_chemicals || []}
+                                        extractedChemicalsRR={
+                                          extracted_chemicals_rr || []
+                                        }
+                                        listId={listId}
+                                        metrics={metrics}
+                                        metricsRR={metricsRR}
+                                      />
+                                    </>
+                                  );
+                                }
+                              )
+                            ) : (
                               <>
-                                <MetricsOverviewV1
-                                  key={listId}
-                                  actualChemicals={actual_chemicals || []}
-                                  actualChemicalsRR={actual_chemicals_rr || []}
-                                  extractedChemicals={extracted_chemicals || []}
-                                  extractedChemicalsRR={
-                                    extracted_chemicals_rr || []
-                                  }
-                                  listId={listId}
-                                  metrics={metrics}
-                                  metricsRR={metricsRR}
+                                <ChemicalResultsSection
+                                  chemicalCategories={[
+                                    {
+                                      data: extractedChemicalsList,
+                                      title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
+                                      color: "text-blue-500",
+                                      icon: Circle,
+                                      columns: Object.keys(
+                                        extractedChemicalsList?.[0] || {}
+                                      ).map((key: string) => {
+                                        return {
+                                          key,
+                                          className: "text-[--ul-text-primary]",
+                                          label:
+                                            key.charAt(0).toUpperCase() +
+                                            key.slice(1),
+                                          ...((key.toLowerCase() === "cas" ||
+                                            key.toLowerCase() === "synonyms") && {
+                                            render: (value: string | string[]) => {
+                                              if (
+                                                !value ||
+                                                (Array.isArray(value) &&
+                                                  value.length === 0)
+                                              )
+                                                return "";
+
+                                              const valuesArray = Array.isArray(value)
+                                                ? value
+                                                : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+
+                                              return (
+                                                <>
+                                                  {valuesArray?.map(
+                                                    (elem: any): any => (
+                                                      <Chip className="mr-2">
+                                                        {elem}
+                                                      </Chip>
+                                                    )
+                                                  )}
+                                                </>
+                                              );
+                                            },
+                                          }),
+                                        };
+                                      }),
+                                    },
+                                  ]}
                                 />
                               </>
-                            );
-                          }
-                        )
-                      ) : (
-                        <>
-                          <ChemicalResultsSection
-                            chemicalCategories={[
-                              {
-                                data: extractedChemicalsList,
-                                title: `Cas Extracted Chemicals (${extractedChemicalsList?.length || 0})`,
-                                color: "text-blue-500",
-                                icon: Circle,
-                                columns: Object.keys(
-                                  extractedChemicalsList?.[0] || {}
-                                ).map((key: string) => {
-                                  return {
-                                    key,
-                                    className: "text-[--ul-text-primary]",
-                                    label:
-                                      key.charAt(0).toUpperCase() +
-                                      key.slice(1),
-                                    ...((key.toLowerCase() === "cas" ||
-                                      key.toLowerCase() === "synonyms") && {
-                                      render: (value: string | string[]) => {
-                                        if (
-                                          !value ||
-                                          (Array.isArray(value) &&
-                                            value.length === 0)
-                                        )
-                                          return "";
+                            )}
 
-                                        const valuesArray = Array.isArray(value)
-                                          ? value
-                                          : value.split(/,\s*/).filter(Boolean); // split string into array if needed
+                          </div> : <div className="text-medium">
+                            <p className="font-bold text-lg mb-2">Highlighted Text</p>
 
-                                        return (
-                                          <>
-                                            {valuesArray?.map(
-                                              (elem: any): any => (
-                                                <Chip className="mr-2">
-                                                  {elem}
-                                                </Chip>
-                                              )
-                                            )}
-                                          </>
-                                        );
-                                      },
-                                    }),
-                                  };
-                                }),
-                              },
-                            ]}
-                          />
-                        </>
-                      )}
-                      <div className="text-medium">
-                         <p className="font-bold text-lg mb-2">Highlighted Text</p>
-                               
-                                {extractionData?.result?.highlight_text && (
-                                  <div
-                                    dangerouslySetInnerHTML={{
-                                      __html:
-                                        extractionData?.result?.highlight_text,
-                                    }}
-                                  />
-                                )}
-                                </div>
-                    </div>
+                            {extractionData?.result?.highlight_text && (
+                              <div
+                                dangerouslySetInnerHTML={{
+                                  __html:
+                                    extractionData?.result?.highlight_text,
+                                }}
+                              />
+                            )}
+                          </div>}
+                      </>
                   ) : (
                     ""
                   )}
@@ -930,6 +980,7 @@ const Chemadvisor = () => {
 
         {/* <ChemicalTable data={mockChemicalData} columns={columns} /> */}
       </div>
+
     </section>
   );
 };
